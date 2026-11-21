@@ -1,0 +1,58 @@
+# Dépendances
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Dossiers natifs générés (par expo prebuild, dans GitHub Actions)
+/ios
+/android
+.kotlin/
+*.orig.*
+
+# Metro
+.metro-health-check*
+
+# Journaux
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+run.log
+
+# macOS
+.DS_Store
+
+# TypeScript
+*.tsbuildinfo
+
+# Secrets de signature et identifiants (jamais dans le dépôt)
+*.jks
+*.keystore
+*.p8
+*.p12
+*.key
+*.pem
+*.mobileprovision
+credentials.json
+credentials/
+.env
+.env.*
+
+# APK construits
+*.apk
+*.aab
+
+# Notes réelles, exports et sauvegardes (jamais dans le dépôt public)
+exports/
+*.sillon
+*.zip
+
+# Fichiers de modèle IA (jamais dans le dépôt)
+*.gguf
+*.pte
+*.bin
+*.safetensors
+*.onnx
