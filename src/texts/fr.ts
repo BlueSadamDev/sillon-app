@@ -18,13 +18,14 @@ export const t = {
   pcloud: {
     title: 'Banc d’essai : dossier pCloud',
     steps:
-      '1. Choisis un dossier dans pCloud. 2. Écris un fichier. 3. Vérifie qu’il arrive dans pCloud (site ou ordinateur). 4. Redémarre le téléphone, puis « Écrire un fichier » à nouveau. 5. Teste la rotation.',
+      '1. Choisis un dossier dans pCloud. 2. Écris un fichier avec chaque méthode, en attendant 1 minute entre deux écritures. 3. Liste, puis relis. 4. Vérifie sur le site pCloud que les fichiers sont arrivés. 5. Redémarre le téléphone et écris à nouveau. 6. Teste la rotation.',
     folderNone: 'Aucun dossier choisi pour l’instant.',
     folder: (uri: string) => `Dossier gardé : ${uri}`,
     pick: 'Choisir le dossier',
-    write: 'Écrire un fichier d’essai',
+    write: 'Écrire un fichier d’essai (méthode 1)',
+    writeLegacy: 'Écrire un fichier d’essai (méthode 2)',
     list: 'Lister les fichiers',
-    readLast: 'Relire le dernier fichier',
+    readLast: 'Relire le fichier d’essai le plus récent',
     rotate: (keep: number) => `Rotation : garder les ${keep} plus récents`,
     checkAccess: 'Vérifier l’accès au dossier',
   },
@@ -41,10 +42,13 @@ export const t = {
   },
   embeddings: {
     title: 'Banc d’essai : embeddings',
-    intro: 'Importe un fichier .gguf depuis le téléphone, puis lance la mesure sur 10 notes fictives et 10 questions.',
+    intro:
+      'Importe un fichier .gguf depuis le téléphone, puis lance la mesure sur 10 notes fictives et 10 questions. Un seul modèle par ouverture de l’app : ferme-la complètement avant d’en mesurer un autre.',
     import: 'Importer un modèle (.gguf)',
     none: 'Aucun modèle importé.',
     run: 'Mesurer',
     remove: 'Supprimer',
+    restart:
+      'Un autre modèle a déjà été mesuré : ferme complètement l’app (balaye-la depuis les apps récentes), rouvre-la, puis mesure ce modèle.',
   },
 } as const;

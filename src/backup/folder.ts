@@ -54,6 +54,22 @@ export function listFiles(dir: Directory): File[] {
   return dir.list().filter((e): e is File => e instanceof File);
 }
 
+export type FolderEntry = { file: File; displayName: string; size: number | null; lastModified: number | null };
+
+/**
+ * Fichiers du dossier avec leur vrai nom. Avec pCloud, l'adresse d'un fichier ne contient pas son nom
+ * (« f113371187787 ») : le nom affiché vient de Directory.info().files, listé dans le même ordre.
+ */
+export function listEntries(dir: Directory): FolderEntry[] {
+  const entries = dir.list();
+  const names = dir.info().files ?? [];
+  const sameOrder = names.length === entries.length;
+  return entries
+    .map((e, i) => ({ e, name: sameOrder ? names[i] : readableName(e.name) }))
+    .filter((x): x is { e: File; name: string } => x.e instanceof File)
+    .map(({ e, name }) => ({ file: e, displayName: name, size: e.size ?? null, lastModified: e.lastModified ?? null }));
+}
+
 /** Message d'erreur court (texte technique, réservé au banc d'essai). */
 export function errorText(e: unknown): string {
   if (e instanceof Error) return `${e.name}: ${e.message}`.slice(0, 300);

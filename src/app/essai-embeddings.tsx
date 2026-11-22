@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { FIXTURE_NOTES, FIXTURE_QUERIES } from '@/ai/__fixtures__/notes-fr';
-import { embed, loadEmbedder, releaseEmbedder, type LoadedEmbedder } from '@/ai/embedder';
+import { embed, loadEmbedder, needsAppRestart, releaseEmbedder, type LoadedEmbedder } from '@/ai/embedder';
 import { deleteModel, importModel, listModels, type StoredModel } from '@/ai/modelStore';
 import { BENCH_TOP_K, EMBEDDING_ENGINE, familyForFile } from '@/ai/settings';
 import { evaluate } from '@/ai/similarity';
@@ -40,6 +40,10 @@ export default function EmbeddingsBench() {
   };
 
   const run = async (model: StoredModel) => {
+    if (needsAppRestart(model.uri)) {
+      add(t.embeddings.restart);
+      return;
+    }
     setBusy(true);
     const family = familyForFile(model.name);
     add(`Mesure : ${model.name} (${mo(model.sizeBytes)}), famille ${family.label}, ${EMBEDDING_ENGINE.threads} cœurs`);

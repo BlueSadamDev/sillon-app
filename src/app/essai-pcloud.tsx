@@ -1,11 +1,19 @@
 // Banc d'essai 1 : écrire, relire, lister et supprimer des fichiers dans le dossier pCloud.
-import { File } from 'expo-file-system';
+// Deux méthodes d'écriture sont comparées : la nouvelle API d'expo-file-system et l'ancienne
+// (expo-file-system/legacy), qui passent par des chemins Android différents.
+import { type Directory } from 'expo-file-system';
+import { StorageAccessFramework } from 'expo-file-system/legacy';
 import { useState } from 'react';
-import { randombytes_buf } from 'react-native-libsodium';
+import { base64_variants, randombytes_buf, to_base64 } from 'react-native-libsodium';
 
-import { BenchButton, BenchScreen, LogView, P } from '@/components/Bench';
-import { useLog } from '@/components/useLog';
-import { errorText, getSavedFolderUri, listFiles, pickFolder, readableName, savedFolder } from '@/backup/folder';
+import {
+  errorText,
+  getSavedFolderUri,
+  listEntries,
+  pickFolder,
+  savedFolder,
+  type FolderEntry,
+} from '@/backup/folder';
 import { fileStamp, filesToDelete } from '@/backup/rotation';
 import {
   PCLOUD_TEST_EXTENSION,
@@ -13,25 +21,34 @@ import {
   PCLOUD_TEST_PREFIX,
   PCLOUD_TEST_SIZE_BYTES,
 } from '@/backup/settings';
+import { BenchButton, BenchScreen, LogView, P } from '@/components/Bench';
+import { useLog } from '@/components/useLog';
 import { t } from '@/texts/fr';
+
+const when = (ms: number | null) => (ms ? new Date(ms).toLocaleString('fr-FR') : 'date inconnue');
+const describe = (f: FolderEntry) => `${f.displayName} (${f.size ?? '?'} octets, ${when(f.lastModified)})`;
 
 export default function PcloudBench() {
   const { lines, add, clear } = useLog();
   const [folderUri, setFolderUri] = useState<string | null>(() => getSavedFolderUri());
-  const [lastWritten, setLastWritten] = useState<{ uri: string; size: number } | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  const withFolder = async (action: string, fn: (dir: NonNullable<ReturnType<typeof savedFolder>>) => void | Promise<void>) => {
+  const withFolder = async (action: string, fn: (dir: Directory) => void | Promise<void>) => {
     const dir = savedFolder();
     if (!dir) {
       add(`${action} : aucun dossier choisi`);
       return;
     }
+    setBusy(true);
     try {
       await fn(dir);
     } catch (e) {
       add(`${action} : ÉCHEC ${errorText(e)}`);
     }
+    setBusy(false);
   };
+
+  const newName = () => `${PCLOUD_TEST_PREFIX}${fileStamp(new Date())}${PCLOUD_TEST_EXTENSION}`;
 
   const pick = async () => {
     try {
@@ -43,69 +60,81 @@ export default function PcloudBench() {
     }
   };
 
-  const check = () => withFolder('Vérification', (dir) => {
-    add(`Vérification : existe=${dir.exists} ; fichiers=${listFiles(dir).length}`);
-  });
+  const check = () =>
+    withFolder('Vérification', (dir) => {
+      add(`Vérification : existe=${dir.exists} ; fichiers=${listEntries(dir).length}`);
+    });
 
-  const write = () => withFolder('Écriture', async (dir) => {
-    const name = `${PCLOUD_TEST_PREFIX}${fileStamp(new Date())}${PCLOUD_TEST_EXTENSION}`;
-    const bytes = randombytes_buf(PCLOUD_TEST_SIZE_BYTES);
-    const t0 = Date.now();
-    const file = dir.createFile(name, 'application/octet-stream');
-    await file.write(bytes);
-    const ms = Date.now() - t0;
-    setLastWritten({ uri: file.uri, size: bytes.length });
-    add(`Écriture OK : ${name}, ${bytes.length} octets en ${ms} ms`);
-  });
-
-  const readLast = async () => {
-    if (!lastWritten) {
-      add('Relecture : écris d’abord un fichier');
-      return;
-    }
-    try {
+  const writeNew = () =>
+    withFolder('Écriture (méthode 1)', async (dir) => {
+      const name = newName();
+      const bytes = randombytes_buf(PCLOUD_TEST_SIZE_BYTES);
       const t0 = Date.now();
-      const bytes = await new File(lastWritten.uri).bytes();
-      add(`Relecture : ${bytes.length} octets (attendu ${lastWritten.size}) en ${Date.now() - t0} ms`);
-    } catch (e) {
-      add(`Relecture : ÉCHEC ${errorText(e)}`);
-    }
-  };
+      const file = dir.createFile(name, 'application/octet-stream');
+      await file.write(bytes);
+      add(`Écriture (méthode 1) OK : ${name}, ${bytes.length} octets en ${Date.now() - t0} ms ; adresse ${file.uri}`);
+    });
 
-  const list = () => withFolder('Liste', (dir) => {
-    const files = listFiles(dir);
-    add(`Liste : ${files.length} fichiers`);
-    for (const f of files) add(`  ${readableName(f.name)} (${f.size ?? '?'} octets)`);
-  });
+  const writeLegacy = () =>
+    withFolder('Écriture (méthode 2)', async (dir) => {
+      const name = newName();
+      const b64 = to_base64(randombytes_buf(PCLOUD_TEST_SIZE_BYTES), base64_variants.ORIGINAL);
+      const t0 = Date.now();
+      const uri = await StorageAccessFramework.createFileAsync(dir.uri, name, 'application/octet-stream');
+      await StorageAccessFramework.writeAsStringAsync(uri, b64, { encoding: 'base64' });
+      add(`Écriture (méthode 2) OK : ${name}, ${PCLOUD_TEST_SIZE_BYTES} octets en ${Date.now() - t0} ms ; adresse ${uri}`);
+    });
 
-  const rotate = () => withFolder('Rotation', (dir) => {
-    const files = listFiles(dir);
-    const toDelete = new Set(filesToDelete(files.map((f) => f.name), PCLOUD_TEST_PREFIX, PCLOUD_TEST_KEEP));
-    let deleted = 0;
-    for (const f of files) {
-      if (!toDelete.has(f.name)) continue;
-      try {
-        f.delete();
-        deleted++;
-        add(`  supprimé : ${readableName(f.name)}`);
-      } catch (e) {
-        add(`  suppression ÉCHEC : ${readableName(f.name)} ${errorText(e)}`);
+  const readNewest = () =>
+    withFolder('Relecture', async (dir) => {
+      const ours = listEntries(dir).filter((f) => f.displayName.startsWith(PCLOUD_TEST_PREFIX));
+      if (ours.length === 0) {
+        add('Relecture : aucun fichier d’essai dans le dossier');
+        return;
       }
-    }
-    add(`Rotation : ${deleted} supprimés, ${listFiles(dir).length} restants`);
-  });
+      const newest = ours.sort((a, b) => (a.displayName < b.displayName ? 1 : -1))[0];
+      const t0 = Date.now();
+      const bytes = await newest.file.bytes();
+      add(`Relecture : ${newest.displayName} → ${bytes.length} octets lus (attendu ${PCLOUD_TEST_SIZE_BYTES}) en ${Date.now() - t0} ms`);
+    });
+
+  const list = () =>
+    withFolder('Liste', (dir) => {
+      const entries = listEntries(dir);
+      add(`Liste : ${entries.length} fichiers`);
+      for (const f of entries) add(`  ${describe(f)}`);
+    });
+
+  const rotate = () =>
+    withFolder('Rotation', (dir) => {
+      const entries = listEntries(dir);
+      const toDelete = new Set(filesToDelete(entries.map((f) => f.displayName), PCLOUD_TEST_PREFIX, PCLOUD_TEST_KEEP));
+      let deleted = 0;
+      for (const f of entries) {
+        if (!toDelete.has(f.displayName)) continue;
+        try {
+          f.file.delete();
+          deleted++;
+          add(`  supprimé : ${f.displayName}`);
+        } catch (e) {
+          add(`  suppression ÉCHEC : ${f.displayName} ${errorText(e)}`);
+        }
+      }
+      add(`Rotation : ${deleted} supprimés, ${listEntries(dir).length} restants`);
+    });
 
   return (
     <BenchScreen>
       <P>{t.pcloud.steps}</P>
       <P>{folderUri ? t.pcloud.folder(folderUri) : t.pcloud.folderNone}</P>
-      <BenchButton label={t.pcloud.pick} onPress={pick} />
-      <BenchButton label={t.pcloud.checkAccess} onPress={check} />
-      <BenchButton label={t.pcloud.write} onPress={write} />
-      <BenchButton label={t.pcloud.readLast} onPress={readLast} />
-      <BenchButton label={t.pcloud.list} onPress={list} />
-      <BenchButton label={t.pcloud.rotate(PCLOUD_TEST_KEEP)} onPress={rotate} />
-      <BenchButton label={t.common.clearLog} onPress={clear} />
+      <BenchButton label={t.pcloud.pick} onPress={pick} disabled={busy} />
+      <BenchButton label={t.pcloud.checkAccess} onPress={check} disabled={busy} />
+      <BenchButton label={t.pcloud.write} onPress={writeNew} disabled={busy} />
+      <BenchButton label={t.pcloud.writeLegacy} onPress={writeLegacy} disabled={busy} />
+      <BenchButton label={t.pcloud.readLast} onPress={readNewest} disabled={busy} />
+      <BenchButton label={t.pcloud.list} onPress={list} disabled={busy} />
+      <BenchButton label={t.pcloud.rotate(PCLOUD_TEST_KEEP)} onPress={rotate} disabled={busy} />
+      <BenchButton label={t.common.clearLog} onPress={clear} disabled={busy} />
       <LogView lines={lines} />
     </BenchScreen>
   );
