@@ -14,12 +14,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors, font, radius, space, TOUCH, type } from '@/theme';
 
-/** Écran simple qui défile, avec le clavier pris en compte. */
-export function FormScreen({ children }: { children: ReactNode }) {
+/** Écran simple qui défile, avec le clavier pris en compte ; contenu centré ou calé en haut. */
+export function FormScreen({ children, top }: { children: ReactNode; top?: boolean }) {
   return (
     <SafeAreaView style={styles.fill}>
       <KeyboardAvoidingView style={styles.fill} behavior="height">
-        <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={[styles.form, top && styles.formTop]} keyboardShouldPersistTaps="handled">
           {children}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -99,6 +99,7 @@ export function ProblemText({ children }: { children: ReactNode }) {
 const styles = StyleSheet.create({
   fill: { flex: 1, backgroundColor: colors.bg },
   form: { flexGrow: 1, justifyContent: 'center', padding: space.screenHome, gap: 16 },
+  formTop: { justifyContent: 'flex-start', paddingTop: 0 },
   field: { gap: 6 },
   input: {
     ...type.bodyWrite,
