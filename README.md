@@ -4,10 +4,17 @@ Application Android personnelle de prise de notes en Markdown. Une IA locale en 
 Tout se passe sur le téléphone : seule une sauvegarde chiffrée sort, dans un dossier pCloud.
 Référence : [docs/CAHIER_DES_CHARGES.md](docs/CAHIER_DES_CHARGES.md).
 
-## État actuel : lot 0 (faisabilité)
+## État actuel : lot 1 (socle)
 
-L'app ne contient pour l'instant que quatre écrans « Banc d'essai » (dossier pCloud, chiffrement,
-rendu Markdown, embeddings), avec des notes fictives. Résultats : [docs/RAPPORT_LOT_0.md](docs/RAPPORT_LOT_0.md).
+- Compte local créé au premier lancement (seule l'empreinte du mot de passe est gardée, dans le coffre
+  sécurisé du téléphone), déverrouillage par empreinte digitale ou mot de passe, délai de verrouillage réglable.
+- Accueil : capture rapide, notes épinglées et récentes, emplacement du « Sillon de la semaine » (lot 4).
+- Éditeur Markdown (barre d'outils, mode lecture, enregistrement automatique, liens `[[ ]]`, tags `#mot`).
+- Pages : arborescence des notes et sous-notes, corbeille de 30 jours.
+- Recherche par mots (sans accents, par début de mot).
+- Écran Compte : mot de passe, empreinte, délai de verrouillage, effacement de toutes les données.
+- Les bancs d'essai du lot 0 restent accessibles depuis l'écran Compte. Résultats :
+  [docs/RAPPORT_LOT_0.md](docs/RAPPORT_LOT_0.md).
 
 ## Lancer l'app (build de développement)
 
@@ -28,7 +35,7 @@ fichier `.apk` sur le téléphone, puis l'ouvrir pour l'installer.
 
 ## Restaurer une sauvegarde
 
-Disponible à partir du lot 2.
+Disponible à partir du lot 2 (sauvegarde chiffrée vers un dossier pCloud).
 
 ## Vérifications avant chaque build
 
