@@ -76,8 +76,16 @@ export const t = {
     cancel: 'Garder',
     restored: 'Note restaurée.',
   },
+  search: {
+    title: 'Recherche',
+    placeholder: 'Chercher dans tes notes',
+    hint: 'Tape un ou plusieurs mots. Sillon les cherche dans les titres et le texte de tes notes.',
+    noneStart: (q: string) => `Rien ne correspond à «\u00a0${q}\u00a0». `,
+    noneAction: 'Vérifie l’orthographe',
+    noneEnd: ' ou essaie un autre mot.',
+    count: (n: number) => (n === 1 ? '1\u00a0note trouvée' : `${n}\u00a0notes trouvées`),
+  },
   soon: {
-    search: 'La recherche dans tes notes arrivera ici dans une prochaine version.',
     insights: 'Sillon repérera ici les idées qui reviennent dans tes notes, dans une prochaine version.',
     account: 'Les réglages de ton compte arriveront ici dans une prochaine version.',
   },

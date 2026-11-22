@@ -14,3 +14,6 @@ export const EXCERPT_LENGTH = 90;
 
 /** Longueur maximale d'un tag (#mot). */
 export const TAG_MAX_LENGTH = 40;
+
+/** Délai entre la dernière frappe et le lancement de la recherche (en millisecondes). */
+export const SEARCH_DELAY_MS = 150;
