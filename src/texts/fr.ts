@@ -22,6 +22,8 @@ export const t = {
     empty: 'Ton carnet est vide pour l’instant. Écris une première idée juste au-dessus.',
     subnotes: (n: number) => (n === 1 ? '1\u00a0sous-note' : `${n}\u00a0sous-notes`),
     account: (name: string) => `Ton compte, ${name}`,
+    swipeTrash: 'Corbeille',
+    swipeArchive: 'Archiver',
   },
   note: {
     untitled: 'Sans titre',
@@ -43,6 +45,13 @@ export const t = {
       `Note et ${n === 1 ? '1\u00a0sous-note mises' : `${n}\u00a0sous-notes mises`} à la corbeille.`,
     undo: 'Annuler',
     newChild: 'Ajouter une sous-note',
+    save: 'Enregistrer',
+    archive: 'Archiver',
+    unarchive: 'Sortir des archives',
+    archived: 'Note archivée.',
+    archivedWithChildren: (n: number) =>
+      `Note et ${n === 1 ? '1\u00a0sous-note archivées' : `${n}\u00a0sous-notes archivées`}.`,
+    unarchived: 'Note sortie des archives.',
     modified: (when: string) => `Modifiée ${when}`,
     tools: {
       heading: 'Titre',
@@ -60,7 +69,13 @@ export const t = {
     expand: (title: string) => `Afficher les sous-notes de ${title}`,
     collapse: (title: string) => `Masquer les sous-notes de ${title}`,
     trash: 'Corbeille',
+    archives: 'Archives',
     trashCount: (n: number) => (n === 0 ? 'vide' : n === 1 ? '1\u00a0note' : `${n}\u00a0notes`),
+  },
+  archives: {
+    title: 'Archives',
+    intro: 'Les notes archivées ne s’affichent plus sur l’accueil. Elles restent ici et dans la recherche, sans limite de durée.',
+    empty: 'Aucune note archivée.',
   },
   trash: {
     title: 'Corbeille',

@@ -18,10 +18,13 @@ type Row = {
   created_at: number;
   updated_at: number;
   deleted_at: number | null;
+  archived_at: number | null;
 };
 
-const COLUMNS = 'id, title, body, parent_id, pinned, created_at, updated_at, deleted_at';
+const COLUMNS = 'id, title, body, parent_id, pinned, created_at, updated_at, deleted_at, archived_at';
 const ALIVE = 'deleted_at IS NULL';
+/** Hors corbeille et hors archives (accueil). */
+const ACTIVE = 'deleted_at IS NULL AND archived_at IS NULL';
 
 function toNote(r: Row): Note {
   return {
@@ -33,6 +36,7 @@ function toNote(r: Row): Note {
     createdAt: r.created_at,
     updatedAt: r.updated_at,
     deletedAt: r.deleted_at,
+    archivedAt: r.archived_at,
   };
 }
 
@@ -83,10 +87,11 @@ export function createNotesRepo(db: Db, { now, newId }: Deps) {
         createdAt: t,
         updatedAt: t,
         deletedAt: null,
+        archivedAt: null,
       };
       await db.transaction(async () => {
         await db.run(
-          `INSERT INTO notes (${COLUMNS}) VALUES (?, ?, ?, ?, 0, ?, ?, NULL)`,
+          `INSERT INTO notes (${COLUMNS}) VALUES (?, ?, ?, ?, 0, ?, ?, NULL, NULL)`,
           [note.id, note.title, note.body, note.parentId, t, t],
         );
         await writeIndex(note.id, note.title, note.body);
@@ -119,7 +124,7 @@ export function createNotesRepo(db: Db, { now, newId }: Deps) {
     },
 
     async recent(limit: number = RECENT_COUNT): Promise<Note[]> {
-      const rows = await db.all<Row>(`SELECT ${COLUMNS} FROM notes WHERE ${ALIVE} ORDER BY updated_at DESC LIMIT ?`, [
+      const rows = await db.all<Row>(`SELECT ${COLUMNS} FROM notes WHERE ${ACTIVE} ORDER BY updated_at DESC LIMIT ?`, [
         limit,
       ]);
       return rows.map(toNote);
@@ -127,12 +132,12 @@ export function createNotesRepo(db: Db, { now, newId }: Deps) {
 
     async pinned(): Promise<NoteWithCount[]> {
       const rows = await db.all<Row>(
-        `SELECT ${COLUMNS} FROM notes WHERE ${ALIVE} AND pinned = 1 ORDER BY title COLLATE NOCASE`,
+        `SELECT ${COLUMNS} FROM notes WHERE ${ACTIVE} AND pinned = 1 ORDER BY title COLLATE NOCASE`,
       );
       return withChildCount(rows);
     },
 
-    /** Toutes les notes hors corbeille, pour l'arborescence. */
+    /** Toutes les notes hors corbeille (archivées comprises), pour l'arborescence. */
     async all(): Promise<NoteWithCount[]> {
       const rows = await db.all<Row>(`SELECT ${COLUMNS} FROM notes WHERE ${ALIVE}`);
       return withChildCount(rows);
@@ -175,6 +180,37 @@ export function createNotesRepo(db: Db, { now, newId }: Deps) {
         for (const n of ids) await db.run(`UPDATE notes SET deleted_at = ? WHERE id = ? AND ${ALIVE}`, [t, n]);
       });
       return ids.length;
+    },
+
+    /** Archive une note et ses sous-notes. Renvoie le nombre de notes archivées. */
+    async archive(id: string): Promise<number> {
+      const ids = [id, ...descendantIds(id, await aliveTree())];
+      const t = now();
+      await db.transaction(async () => {
+        for (const n of ids) await db.run('UPDATE notes SET archived_at = ? WHERE id = ? AND archived_at IS NULL', [t, n]);
+      });
+      return ids.length;
+    },
+
+    /** Sort une note des archives, avec les sous-notes archivées en même temps qu'elle. */
+    async unarchive(id: string): Promise<void> {
+      const note = await get(id);
+      if (!note || note.archivedAt === null) return;
+      const batch = await db.all<{ id: string; title: string; parent_id: string | null }>(
+        'SELECT id, title, parent_id FROM notes WHERE archived_at = ?',
+        [note.archivedAt],
+      );
+      const ids = [id, ...descendantIds(id, batch.map((r) => ({ id: r.id, title: r.title, parentId: r.parent_id })))];
+      await db.transaction(async () => {
+        for (const n of ids) await db.run('UPDATE notes SET archived_at = NULL WHERE id = ?', [n]);
+      });
+    },
+
+    async archived(): Promise<Note[]> {
+      const rows = await db.all<Row>(
+        `SELECT ${COLUMNS} FROM notes WHERE ${ALIVE} AND archived_at IS NOT NULL ORDER BY archived_at DESC, title COLLATE NOCASE`,
+      );
+      return rows.map(toNote);
     },
 
     async trashed(): Promise<Note[]> {

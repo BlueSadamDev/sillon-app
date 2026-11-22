@@ -140,6 +140,45 @@ describe('base des notes', () => {
     expect(await repo.removeIfEmpty(parent.id)).toBe(false);
   });
 
+  it('archive une note et ses sous-notes : hors de l’accueil, mais dans Pages et la recherche', async () => {
+    const { repo, tick } = await setup();
+    const parent = await repo.create(FAKE_NOTES.jardin);
+    await repo.create({ ...FAKE_NOTES.tomates, parentId: parent.id });
+    await repo.setPinned(parent.id, true);
+    tick();
+    expect(await repo.archive(parent.id)).toBe(2);
+    expect(await repo.recent()).toEqual([]);
+    expect(await repo.pinned()).toEqual([]);
+    expect((await repo.all()).length).toBe(2);
+    expect((await repo.archived()).map((n) => n.title).sort()).toEqual(['Jardin', 'Tomates']);
+    expect((await repo.search('radis')).map((n) => n.title)).toEqual(['Jardin']);
+    await repo.unarchive(parent.id);
+    expect((await repo.recent()).length).toBe(2);
+    expect(await repo.archived()).toEqual([]);
+  });
+
+  it('une note archivée n’est jamais effacée toute seule', async () => {
+    const { repo, tick } = await setup();
+    const n = await repo.create(FAKE_NOTES.lecture);
+    await repo.archive(n.id);
+    tick(400 * DAY);
+    expect(await repo.purgeTrash()).toBe(0);
+    expect((await repo.get(n.id))?.archivedAt).not.toBeNull();
+  });
+
+  it('met à jour une base de la version 1 sans perdre de note', async () => {
+    const db = memoryDb();
+    await db.exec(`CREATE TABLE notes (id TEXT PRIMARY KEY NOT NULL, title TEXT NOT NULL DEFAULT '', body TEXT NOT NULL DEFAULT '',
+      parent_id TEXT, pinned INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, deleted_at INTEGER);
+      CREATE TABLE note_tags (note_id TEXT NOT NULL, tag TEXT NOT NULL, PRIMARY KEY (note_id, tag));
+      CREATE VIRTUAL TABLE notes_fts USING fts5 (id UNINDEXED, title, body, tokenize = 'unicode61 remove_diacritics 2');
+      INSERT INTO notes VALUES ('ancienne', 'Note fictive', 'texte', NULL, 0, 1, 1, NULL);
+      PRAGMA user_version = 1;`);
+    await migrate(db);
+    const repo = createNotesRepo(db, { now: () => 2, newId: () => 'x' });
+    expect(await repo.get('ancienne')).toMatchObject({ title: 'Note fictive', archivedAt: null });
+  });
+
   it('efface toutes les notes', async () => {
     const { repo } = await setup();
     await repo.create(FAKE_NOTES.jardin);

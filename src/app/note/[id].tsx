@@ -5,6 +5,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AppState,
+  Keyboard,
   KeyboardAvoidingView,
   Pressable,
   StyleSheet,
@@ -30,7 +31,7 @@ import { extractTags } from '@/notes/tags';
 import { buildTree, descendantIds, pathOf, type TreeNode } from '@/notes/tree';
 import { modifiedWhen } from '@/texts/dates';
 import { t } from '@/texts/fr';
-import { colors, radius, space, TOUCH, type } from '@/theme';
+import { colors, font, radius, space, TOUCH, type } from '@/theme';
 
 type Draft = { title: string; body: string };
 
@@ -44,6 +45,7 @@ export default function NoteScreen() {
   const [draft, setDraft] = useState<Draft>({ title: '', body: '' });
   const [mode, setMode] = useState<'write' | 'read'>('read');
   const [pinned, setPinned] = useState(false);
+  const [archived, setArchived] = useState(false);
   const [parentId, setParentId] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState(0);
   const [all, setAll] = useState<NoteWithCount[]>([]);
@@ -70,6 +72,7 @@ export default function NoteScreen() {
       saved.current = d;
       setDraft(d);
       setPinned(note.pinned);
+      setArchived(note.archivedAt !== null);
       setParentId(note.parentId);
       setUpdatedAt(note.updatedAt);
       setAll(notes);
@@ -152,6 +155,40 @@ export default function NoteScreen() {
     notesChanged();
   }
 
+  /** Bouton « Enregistrer » : enregistre tout de suite et revient à l'écran précédent. */
+  async function saveAndClose() {
+    Keyboard.dismiss();
+    await save();
+    router.back();
+  }
+
+  async function toggleArchive() {
+    setMenu('none');
+    await save();
+    const repo = await openNotes();
+    if (archived) {
+      await repo.unarchive(id);
+      setArchived(false);
+      notesChanged();
+      toast({ message: t.note.unarchived });
+      return;
+    }
+    const count = await repo.archive(id);
+    setArchived(true);
+    notesChanged();
+    toast({
+      message: count > 1 ? t.note.archivedWithChildren(count - 1) : t.note.archived,
+      action: {
+        label: t.note.undo,
+        run: async () => {
+          await repo.unarchive(id);
+          setArchived(false);
+          notesChanged();
+        },
+      },
+    });
+  }
+
   async function newChild() {
     setMenu('none');
     await save();
@@ -213,6 +250,14 @@ export default function NoteScreen() {
         <Text style={[type.small, styles.path]} numberOfLines={1}>
           {path.length > 0 ? [...path.map((n) => n.title || t.note.untitled), draft.title || t.note.untitled].join(' › ') : ''}
         </Text>
+        {loaded && mode === 'write' && (
+          <Pressable
+            accessibilityRole="button"
+            onPress={saveAndClose}
+            style={({ pressed }) => [styles.saveButton, pressed && styles.dim]}>
+            <Text style={styles.saveText}>{t.note.save}</Text>
+          </Pressable>
+        )}
         <Pressable accessibilityRole="button" accessibilityLabel={t.note.menu} onPress={() => setMenu('actions')} style={styles.icon}>
           <MoreIcon />
         </Pressable>
@@ -272,6 +317,7 @@ export default function NoteScreen() {
         <SheetItem label={pinned ? t.note.unpin : t.note.pin} onPress={togglePin} />
         <SheetItem label={t.note.newChild} onPress={newChild} />
         <SheetItem label={t.note.move} onPress={() => setMenu('move')} />
+        <SheetItem label={archived ? t.note.unarchive : t.note.archive} onPress={toggleArchive} />
         <SheetItem label={t.note.trash} onPress={trash} />
       </Sheet>
 
@@ -314,6 +360,16 @@ const styles = StyleSheet.create({
   headerBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, gap: 4 },
   icon: { width: TOUCH, height: TOUCH, alignItems: 'center', justifyContent: 'center' },
   path: { flex: 1, textAlign: 'center' },
+  saveButton: {
+    minHeight: TOUCH,
+    paddingHorizontal: 14,
+    borderRadius: radius.chip,
+    backgroundColor: colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveText: { ...font('bold'), fontSize: 14, color: colors.onAccent },
+  dim: { opacity: 0.7 },
   writeHead: { paddingHorizontal: space.screenNote, gap: 4 },
   titleInput: { padding: 0, paddingVertical: 4 },
   meta: { gap: 8, paddingBottom: 12 },

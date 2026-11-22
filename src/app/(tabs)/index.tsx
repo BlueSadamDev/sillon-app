@@ -1,9 +1,12 @@
-// Accueil (DESIGN.md, « Écrans du lot 1 », n° 5).
+// Accueil (DESIGN.md, « Écrans du lot 1 », n° 5). Les récentes se glissent vers la droite
+// (corbeille) ou vers la gauche (archive).
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAccount } from '@/account/AccountProvider';
+import { SwipeableRow } from '@/components/SwipeableRow';
+import { useToast } from '@/components/Toast';
 import { InsightCard, NoteRow, PinnedCard, QuickCapture, SectionLabel } from '@/components/notes';
 import { notesChanged } from '@/db/events';
 import { openNotes } from '@/db/expoDb';
@@ -15,6 +18,7 @@ import { colors, font, space, TOUCH, type } from '@/theme';
 
 export default function Home() {
   const { username } = useAccount();
+  const toast = useToast();
   const [data] = useNotesQuery(
     async (repo) => ({ pinned: await repo.pinned(), recent: await repo.recent() }),
     { pinned: [], recent: [] },
@@ -31,6 +35,26 @@ export default function Home() {
     const note = await repo.create({ title: parts.title, body: parts.body });
     if (parts.openEditor) router.push({ pathname: '/note/[id]', params: { id: note.id, mode: 'write' } });
     else notesChanged();
+  }
+
+  async function trash(id: string) {
+    const repo = await openNotes();
+    const count = await repo.trash(id);
+    notesChanged();
+    toast({
+      message: count > 1 ? t.note.trashedWithChildren(count - 1) : t.note.trashed,
+      action: { label: t.note.undo, run: () => repo.restore(id).then(notesChanged) },
+    });
+  }
+
+  async function archive(id: string) {
+    const repo = await openNotes();
+    const count = await repo.archive(id);
+    notesChanged();
+    toast({
+      message: count > 1 ? t.note.archivedWithChildren(count - 1) : t.note.archived,
+      action: { label: t.note.undo, run: () => repo.unarchive(id).then(notesChanged) },
+    });
   }
 
   const open = (id: string) => router.push({ pathname: '/note/[id]', params: { id } });
@@ -52,8 +76,8 @@ export default function Home() {
           </Pressable>
         </View>
 
-        <QuickCapture onSubmit={capture} />
         <InsightCard text={t.home.insightWaiting} />
+        <QuickCapture onSubmit={capture} />
 
         {data.pinned.length > 0 && (
           <View style={styles.section}>
@@ -76,7 +100,9 @@ export default function Home() {
           ) : (
             <View>
               {data.recent.map((n) => (
-                <NoteRow key={n.id} note={n} now={now} onPress={() => open(n.id)} />
+                <SwipeableRow key={n.id} onTrash={() => trash(n.id)} onArchive={() => archive(n.id)}>
+                  <NoteRow note={n} now={now} onPress={() => open(n.id)} />
+                </SwipeableRow>
               ))}
             </View>
           )}

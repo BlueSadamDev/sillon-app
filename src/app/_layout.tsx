@@ -43,6 +43,7 @@ function Gate() {
           <Stack.Screen name="note/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="compte" options={{ headerShown: false }} />
           <Stack.Screen name="corbeille" options={{ headerShown: false }} />
+          <Stack.Screen name="archives" options={{ headerShown: false }} />
           <Stack.Screen name="mot-de-passe" options={{ headerShown: false }} />
           <Stack.Screen name="essais" options={{ title: t.benches.title }} />
           <Stack.Screen name="essai-pcloud" options={{ title: t.pcloud.title }} />

@@ -1,11 +1,11 @@
 // Pages (DESIGN.md, « Écrans du lot 1 », n° 7) : arborescence dépliable, « Nouvelle page »,
-// corbeille en bas de liste.
+// archives et corbeille en bas de liste.
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ChevronIcon, TrashIcon } from '@/components/icons';
+import { ArchiveIcon, ChevronIcon, TrashIcon } from '@/components/icons';
 import { PrimaryButton } from '@/components/ui';
 import { openNotes } from '@/db/expoDb';
 import type { NoteWithCount } from '@/db/notesRepo';
@@ -22,8 +22,11 @@ export default function Pages() {
     async (repo) => ({ notes: await repo.all(), trashed: (await repo.trashed()).length }),
     { notes: [] as NoteWithCount[], trashed: 0 },
   );
+  // Les notes archivées ont leur propre écran (« Archives »).
+  const active = data.notes.filter((n) => n.archivedAt === null);
+  const archivedCount = data.notes.length - active.length;
   const [open, setOpen] = useState<Set<string>>(new Set());
-  const tree = buildTree(data.notes);
+  const tree = buildTree(active);
 
   const toggle = (id: string) =>
     setOpen((prev) => {
@@ -54,6 +57,11 @@ export default function Pages() {
             ))}
           </View>
         )}
+        <Pressable accessibilityRole="button" onPress={() => router.push('/archives')} style={styles.trash}>
+          <ArchiveIcon color={colors.inkMuted} />
+          <Text style={[type.rowTitle, styles.grow]}>{t.pages.archives}</Text>
+          <Text style={type.small}>{t.pages.trashCount(archivedCount)}</Text>
+        </Pressable>
         <Pressable accessibilityRole="button" onPress={() => router.push('/corbeille')} style={styles.trash}>
           <TrashIcon color={colors.inkMuted} />
           <Text style={[type.rowTitle, styles.grow]}>{t.pages.trash}</Text>

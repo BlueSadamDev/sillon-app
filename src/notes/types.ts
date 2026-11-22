@@ -12,4 +12,9 @@ export type Note = {
   updatedAt: number;
   /** Date de mise à la corbeille, ou null si la note n'est pas à la corbeille. */
   deletedAt: number | null;
+  /**
+   * Date d'archivage, ou null. Une note archivée quitte l'accueil (récentes, épinglées) mais reste
+   * dans Pages (groupe « Archives ») et dans la recherche ; elle n'est jamais effacée toute seule.
+   */
+  archivedAt: number | null;
 };

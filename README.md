@@ -9,9 +9,10 @@ Référence : [docs/CAHIER_DES_CHARGES.md](docs/CAHIER_DES_CHARGES.md).
 - Compte local créé au premier lancement (seule l'empreinte du mot de passe est gardée, dans le coffre
   sécurisé du téléphone), déverrouillage par empreinte digitale ou mot de passe, délai de verrouillage réglable.
 - Accueil : capture rapide, notes épinglées et récentes, emplacement du « Sillon de la semaine » (lot 4).
-- Éditeur Markdown (barre d'outils, mode lecture, enregistrement automatique, liens `[[ ]]`, tags `#mot`).
+- Éditeur Markdown (barre d'outils, mode lecture, enregistrement automatique et bouton « Enregistrer », liens `[[ ]]`, tags `#mot`).
 - Pages : arborescence des notes et sous-notes, corbeille de 30 jours.
 - Recherche par mots (sans accents, par début de mot).
+- Archives (glisser une note de l’accueil vers la gauche) et corbeille (vers la droite).
 - Écran Compte : mot de passe, empreinte, délai de verrouillage, effacement de toutes les données.
 - Les bancs d'essai du lot 0 restent accessibles depuis l'écran Compte. Résultats :
   [docs/RAPPORT_LOT_0.md](docs/RAPPORT_LOT_0.md).

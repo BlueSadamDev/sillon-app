@@ -83,3 +83,9 @@ export const TrashIcon = (p: IconProps) => (
     {(c) => <Path d="M4.5 6.5 H19.5 M9.5 6.5 V4.5 H14.5 V6.5 M6.5 6.5 L7.5 20 H16.5 L17.5 6.5 M10 10.5 V16 M14 10.5 V16" stroke={c} {...line} />}
   </Icon>
 );
+
+export const ArchiveIcon = (p: IconProps) => (
+  <Icon {...p}>
+    {(c) => <Path d="M3.5 5 H20.5 V9 H3.5 Z M5 9 V19.5 H19 V9 M9.5 13 H14.5" stroke={c} {...line} />}
+  </Icon>
+);

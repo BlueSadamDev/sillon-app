@@ -30,6 +30,10 @@ const MIGRATIONS: string[] = [
     tokenize = 'unicode61 remove_diacritics 2'
   );
   `,
+  // Version 2 : archive des notes.
+  `
+  ALTER TABLE notes ADD COLUMN archived_at INTEGER;
+  `,
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;
