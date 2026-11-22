@@ -1,7 +1,11 @@
-// Tous les textes affichés. Lot 0 : uniquement les écrans « Banc d'essai » (outil interne,
-// sans travail graphique). Les textes de l'app réelle suivront la charte de DESIGN.md.
+// Tous les textes affichés, selon la charte de DESIGN.md (tutoiement, typographie française).
+// Les textes des écrans « Banc d'essai » (lot 0, outil interne) sont regroupés à la fin.
 
 export const t = {
+  brand: {
+    name: 'Sillon',
+    tagline: 'Tes notes, et ce qui en pousse',
+  },
   home: {
     title: 'Sillon : bancs d’essai',
     intro: 'Quatre essais techniques du lot 0. Les notes utilisées sont fictives.',

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <!-- Logo Sillon (DESIGN.md, « Identité ») : deux sillons et une pousse. Source unique des icônes. -->
+  <g fill="none" stroke="#1D1B17" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 86 C38 72 52 72 60 80 S82 92 102 78"/>
+    <path d="M18 62 C38 48 52 48 60 56 S82 68 102 54"/>
+    <path d="M60 54 L60 30"/>
+  </g>
+  <path d="M60 38 C68 30 78 30 82 34 C76 42 66 42 60 38" fill="#B4532A" stroke="#B4532A" stroke-width="4" stroke-linejoin="round"/>
+</svg>
