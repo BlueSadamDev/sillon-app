@@ -23,12 +23,21 @@ de dossiers d'Android et demande une **permission persistante** sur le dossier c
 natif : `takePersistableUriPermission`). L'adresse du dossier est gardée dans l'espace privé de l'app.
 Fichier d'essai : 256 Kio d'octets aléatoires, nommé `sillon-essai-AAAAMMJJ-HHMMSS.sillon`.
 
+### Premier essai (APK de production n° 1, 22 novembre 2026)
+
+- pCloud apparaît dans le sélecteur : **oui**. Adresse obtenue : `content://com.pcloud.pcloud.documents/tree/<identifiant>`.
+- Écriture d'un fichier de 256 Kio : **réussie deux fois**, environ 790 ms chacune.
+- Relecture du fichier juste après l'écriture, par l'adresse renvoyée à la création : **échec** (`FileNotFoundException`). L'adresse du fichier change une fois que pCloud l'a pris en charge.
+- Liste du dossier : 2 fichiers, nommés par des identifiants pCloud (`f113371187787`) et non par leur nom. L'un fait 262 144 octets, l'autre **0 octet** (envoi en cours ?).
+- Écritures suivantes : **refusées** par pCloud (`createFile` : « file could not be created »).
+- Corrections pour l'essai n° 2 : lecture du vrai nom par `Directory.info().files` ; relecture après une nouvelle liste du dossier ; seconde méthode d'écriture (`expo-file-system/legacy`) pour comparer ; attente d'une minute entre deux écritures.
+
 | Vérification | Résultat |
 | --- | --- |
-| pCloud apparaît dans le sélecteur de dossiers | à mesurer |
-| Écriture d'un fichier dans un dossier pCloud (temps) | à mesurer |
-| Relecture du fichier écrit | à mesurer |
-| Liste des fichiers du dossier | à mesurer |
+| pCloud apparaît dans le sélecteur de dossiers | oui |
+| Écriture d'un fichier dans un dossier pCloud (temps) | 2 réussites (≈ 790 ms), puis refus |
+| Relecture du fichier écrit | échec par l'adresse de création ; à refaire après liste |
+| Liste des fichiers du dossier | oui, mais noms remplacés par des identifiants |
 | Suppression des plus anciens (rotation) | à mesurer |
 | Accès conservé après redémarrage du téléphone | à mesurer |
 | Fichier visible dans le cloud pCloud (site ou ordinateur) | à mesurer |
@@ -54,6 +63,13 @@ avec étiquette d'authentification. L'en-tête est authentifié lui aussi (donn�
 modification fait échouer le déchiffrement. Tests automatiques : `src/backup/format.test.ts`.
 
 ### Mesures sur le S21
+
+**Défaut trouvé dans llama.rn 0.12.9** : la taille des vecteurs est retenue au premier modèle chargé
+(`static const int n_embd` dans `cpp/rn-completion.cpp`) et réutilisée pour les modèles suivants tant
+que l'app tourne. Après Qwen3 (1 024), e5-small (384) et EmbeddingGemma (768) ont renvoyé des vecteurs
+de 1 024 nombres, faux : leurs mesures du premier essai (1/10) sont invalides. Corrigé dans llama.rn 0.13
+(`llama_model_n_embd_out`, sans `static`). Contournement : un seul modèle par ouverture de l'app ; le banc
+d'essai le vérifie désormais. Pour Sillon, un seul modèle d'embeddings sera utilisé : le défaut ne gêne pas.
 
 Carnet fictif : 200 notes (≈ ? Kio) et 2 000 notes (≈ ? Kio).
 
@@ -93,14 +109,14 @@ Carnet fictif : 200 notes (≈ ? Kio) et 2 000 notes (≈ ? Kio).
 
 | Élément | Rendu sur le S21 |
 | --- | --- |
-| Titres, gras, italique, barré | à mesurer |
-| Listes à puces et numérotées | à mesurer |
-| Cases à cocher (cochée / non cochée) | à mesurer |
-| Citation | à mesurer |
+| Titres, gras, italique, barré | titres, gras et italique corrects ; barré à vérifier |
+| Listes à puces et numérotées | correctes |
+| Cases à cocher (cochée / non cochée) | correctes (☐ / ☑) |
+| Citation | correcte (trait vertical à gauche) |
 | Lien `[[ ]]` cliquable | à mesurer |
 | Lien ordinaire | à mesurer |
 | Bloc de code intact | à mesurer |
-| Analyse d'une note longue (≈ 40 Kio) | à mesurer |
+| Analyse d'une note longue (29 Kio, 1 199 blocs) | 78 ms |
 
 ## 4. Embeddings (llama.rn, GGUF)
 
@@ -124,11 +140,18 @@ pour la note sur Lisbonne). Moteur : 4 cœurs, sans GPU (Exynos/Mali, comme Aube
 
 ### Mesures sur le S21
 
+**Défaut trouvé dans llama.rn 0.12.9** : la taille des vecteurs est retenue au premier modèle chargé
+(`static const int n_embd` dans `cpp/rn-completion.cpp`) et réutilisée pour les modèles suivants tant
+que l'app tourne. Après Qwen3 (1 024), e5-small (384) et EmbeddingGemma (768) ont renvoyé des vecteurs
+de 1 024 nombres, faux : leurs mesures du premier essai (1/10) sont invalides. Corrigé dans llama.rn 0.13
+(`llama_model_n_embd_out`, sans `static`). Contournement : un seul modèle par ouverture de l'app ; le banc
+d'essai le vérifie désormais. Pour Sillon, un seul modèle d'embeddings sera utilisé : le défaut ne gêne pas.
+
 | Modèle | Empreinte SHA-256 | Chargement | Temps par note | Temps par question | 1re place | Top 3 | MRR | Marge |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | multilingual-e5-small Q8_0 | à mesurer | | | | /10 | /10 | | |
-| EmbeddingGemma 300M Q8_0 | | | | | /10 | /10 | | |
-| Qwen3-Embedding 0.6B Q8_0 | | | | | /10 | /10 | | |
+| EmbeddingGemma 300M QAT Q8_0 (313 Mo) | à relire (`6fa0c02a…`) | à refaire | | | /10 | /10 | | |
+| Qwen3-Embedding 0.6B Q8_0 (610 Mo) | `06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439` | 1 542 ms | 499 ms (390 à 677) | 82 ms | 8/10 | 10/10 | 0,90 | 0,086 |
 
 ## Recommandations
 
