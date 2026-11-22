@@ -152,6 +152,13 @@ export default function NoteScreen() {
     notesChanged();
   }
 
+  async function newChild() {
+    setMenu('none');
+    await save();
+    const child = await (await openNotes()).create({ parentId: id });
+    router.push({ pathname: '/note/[id]', params: { id: child.id, mode: 'write' } });
+  }
+
   async function moveTo(newParent: string | null) {
     setMenu('none');
     await save();
@@ -263,6 +270,7 @@ export default function NoteScreen() {
 
       <Sheet visible={menu === 'actions'} onClose={() => setMenu('none')}>
         <SheetItem label={pinned ? t.note.unpin : t.note.pin} onPress={togglePin} />
+        <SheetItem label={t.note.newChild} onPress={newChild} />
         <SheetItem label={t.note.move} onPress={() => setMenu('move')} />
         <SheetItem label={t.note.trash} onPress={trash} />
       </Sheet>

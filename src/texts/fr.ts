@@ -42,6 +42,7 @@ export const t = {
     trashedWithChildren: (n: number) =>
       `Note et ${n === 1 ? '1\u00a0sous-note mises' : `${n}\u00a0sous-notes mises`} à la corbeille.`,
     undo: 'Annuler',
+    newChild: 'Ajouter une sous-note',
     modified: (when: string) => `Modifiée ${when}`,
     tools: {
       heading: 'Titre',
@@ -52,8 +53,30 @@ export const t = {
       link: 'Lien vers une note',
     },
   },
+  pages: {
+    title: 'Pages',
+    newPage: 'Nouvelle page',
+    empty: 'Aucune note pour l’instant. Crée ta première page.',
+    expand: (title: string) => `Afficher les sous-notes de ${title}`,
+    collapse: (title: string) => `Masquer les sous-notes de ${title}`,
+    trash: 'Corbeille',
+    trashCount: (n: number) => (n === 0 ? 'vide' : n === 1 ? '1\u00a0note' : `${n}\u00a0notes`),
+  },
+  trash: {
+    title: 'Corbeille',
+    intro: 'Les notes restent 30\u00a0jours dans la corbeille, puis Sillon les efface.',
+    empty: 'La corbeille est vide.',
+    daysLeft: (n: number) =>
+      n <= 0 ? 'Effacée bientôt' : n === 1 ? 'Effacée dans 1\u00a0jour' : `Effacée dans ${n}\u00a0jours`,
+    restore: 'Restaurer',
+    deleteForever: 'Effacer définitivement',
+    confirmTitle: 'Effacer cette note\u00a0?',
+    confirmText: 'Elle sera effacée de ce téléphone. Cette action ne peut pas être annulée.',
+    confirm: 'Effacer',
+    cancel: 'Garder',
+    restored: 'Note restaurée.',
+  },
   soon: {
-    pages: 'L’arborescence de tes notes arrivera ici dans une prochaine version.',
     search: 'La recherche dans tes notes arrivera ici dans une prochaine version.',
     insights: 'Sillon repérera ici les idées qui reviennent dans tes notes, dans une prochaine version.',
     account: 'Les réglages de ton compte arriveront ici dans une prochaine version.',

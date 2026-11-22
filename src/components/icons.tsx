@@ -73,3 +73,13 @@ export const MoreIcon = (p: IconProps) => (
     )}
   </Icon>
 );
+
+export const ChevronIcon = ({ open, ...p }: IconProps & { open: boolean }) => (
+  <Icon {...p}>{(c) => <Path d={open ? 'M6 9 L12 15 L18 9' : 'M9 6 L15 12 L9 18'} stroke={c} {...line} />}</Icon>
+);
+
+export const TrashIcon = (p: IconProps) => (
+  <Icon {...p}>
+    {(c) => <Path d="M4.5 6.5 H19.5 M9.5 6.5 V4.5 H14.5 V6.5 M6.5 6.5 L7.5 20 H16.5 L17.5 6.5 M10 10.5 V16 M14 10.5 V16" stroke={c} {...line} />}
+  </Icon>
+);
