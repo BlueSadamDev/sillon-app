@@ -42,7 +42,8 @@
         }
       ],
       "react-native-libsodium",
-      "llama.rn"
+      "llama.rn",
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,
