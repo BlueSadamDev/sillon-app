@@ -31,7 +31,10 @@ export function openNotes(): Promise<NotesRepo> {
     await sqlite.execAsync('PRAGMA journal_mode = WAL');
     const db = wrap(sqlite);
     await migrate(db);
-    return createNotesRepo(db, { now: () => Date.now(), newId: () => uuidFromBytes(randombytes_buf(16)) });
+    const repo = createNotesRepo(db, { now: () => Date.now(), newId: () => uuidFromBytes(randombytes_buf(16)) });
+    // Les notes restées plus de 30 jours dans la corbeille sont effacées à l'ouverture.
+    await repo.purgeTrash();
+    return repo;
   })();
   return ready;
 }

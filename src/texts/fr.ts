@@ -6,6 +6,37 @@ export const t = {
     name: 'Sillon',
     tagline: 'Tes notes, et ce qui en pousse',
   },
+  tabs: {
+    home: 'Accueil',
+    pages: 'Pages',
+    search: 'Recherche',
+    insights: 'Insights',
+  },
+  home: {
+    capturePlaceholder: 'Une idée, une pensée…',
+    captureButton: 'Enregistrer la note',
+    insightLabel: 'Le sillon de la semaine',
+    insightWaiting: 'Sillon repérera ici les idées qui reviennent dans tes notes.',
+    pinned: 'Épinglées',
+    recent: 'Récentes',
+    empty: 'Ton carnet est vide pour l’instant. Écris une première idée juste au-dessus.',
+    subnotes: (n: number) => (n === 1 ? '1\u00a0sous-note' : `${n}\u00a0sous-notes`),
+    account: (name: string) => `Ton compte, ${name}`,
+  },
+  note: {
+    untitled: 'Sans titre',
+    back: 'Retour',
+  },
+  soon: {
+    pages: 'L’arborescence de tes notes arrivera ici dans une prochaine version.',
+    search: 'La recherche dans tes notes arrivera ici dans une prochaine version.',
+    insights: 'Sillon repérera ici les idées qui reviennent dans tes notes, dans une prochaine version.',
+    account: 'Les réglages de ton compte arriveront ici dans une prochaine version.',
+  },
+  accountScreen: {
+    title: 'Compte',
+    benches: 'Bancs d’essai du lot 0',
+  },
   account: {
     welcome: 'Bienvenue dans Sillon',
     intro: 'Crée ton compte. Il reste sur ce téléphone, rien n’est envoyé en ligne.',
@@ -37,7 +68,7 @@ export const t = {
     checking: 'Vérification…',
     wrongPassword: 'Ce mot de passe ne correspond pas. Essaie à nouveau.',
   },
-  home: {
+  benches: {
     title: 'Sillon : bancs d’essai',
     intro: 'Quatre essais techniques du lot 0. Les notes utilisées sont fictives.',
     pcloud: 'Dossier pCloud',
