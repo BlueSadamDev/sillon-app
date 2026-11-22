@@ -24,14 +24,22 @@ export const colors = {
 } as const;
 
 /**
- * Police. DESIGN.md prévoit Satoshi (fichiers .ttf de X-Gallery, dans assets/fonts/).
- * Tant que ces fichiers ne sont pas dans le dépôt, la police du téléphone est utilisée :
- * il suffira alors de renseigner fontFamily ici, sans toucher aux écrans.
+ * Police : Satoshi (fichiers .ttf repris de X-Gallery, dans assets/fonts/, chargés au démarrage
+ * par expo-font). Chaque graisse est un fichier distinct : on choisit la famille, pas fontWeight.
  */
 type Weight = 'regular' | 'medium' | 'bold';
-const WEIGHTS: Record<Weight, TextStyle['fontWeight']> = { regular: '400', medium: '500', bold: '700' };
+export const FONT_FILES = {
+  'Satoshi-Regular': require('../assets/fonts/Satoshi-Regular.ttf'),
+  'Satoshi-Medium': require('../assets/fonts/Satoshi-Medium.ttf'),
+  'Satoshi-Bold': require('../assets/fonts/Satoshi-Bold.ttf'),
+};
+const FAMILIES: Record<Weight, keyof typeof FONT_FILES> = {
+  regular: 'Satoshi-Regular',
+  medium: 'Satoshi-Medium',
+  bold: 'Satoshi-Bold',
+};
 export function font(weight: Weight): TextStyle {
-  return { fontWeight: WEIGHTS[weight] };
+  return { fontFamily: FAMILIES[weight] };
 }
 
 /** Rôles typographiques (tableau « Typographie » de DESIGN.md). */

@@ -1,10 +1,15 @@
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
+import { StartupScreen } from '@/components/StartupScreen';
 import { t } from '@/texts/fr';
-import { colors } from '@/theme';
+import { colors, FONT_FILES } from '@/theme';
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts(FONT_FILES);
+  // Si la police ne se charge pas, l'app démarre quand même avec celle du téléphone.
+  if (!fontsLoaded && !fontError) return <StartupScreen />;
   return (
     <>
       <StatusBar style="dark" />
