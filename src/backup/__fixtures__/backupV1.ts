@@ -1,0 +1,8 @@
+// Fichier de sauvegarde FICTIF au format version 1, fabriqué une fois pour toutes (restore.test.ts).
+// Il ne doit jamais changer : il garantit que l'app relit toujours les sauvegardes de version 1.
+// Contenu : deux notes fictives ; mot de passe fictif ; Argon2id allégé (2 passes, 1 Mo).
+
+export const BACKUP_V1_PASSWORD = 'mot-de-passe-fictif-format-v1';
+
+export const BACKUP_V1_FILE =
+  'U0lMTgEBAAAAAgAABAAAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnkvnwiNKGio/8rzVurUWkyY/VzO6y+VphHPkvAKboQBqc0jRnkG652lAQ4ftxEnSOikceTT4GXsl3ld/pLhjoMEswKCIldPko0lv/RuFKXZ86HgjpGkS9eS7y1CrZh5nRfkD1G0OTl05X15YkrUKcnOR2kD+VlhFd0w4h60TY5bKi5+BH2kqsEp4Sw46hI+s1LH7TisB0K4Me8aA1gNEw/+zdNIOuWU2E1hkFubD8vSULAnkPBabZwofxCQuGRg5rK6yYLoazNGRzneALPSYovpZ98CsltR8G3wwSTrOL94OevpW3SzYWS7Flnn7ovJi0A4FS/Hk0eubq43ugTqNozmysHBbsUinzwfcGAtDAijUvZ+uQHSP8NAs8tsWywn3lHnlKE4vLwraaESAEcqftLmdEmWBTmtg6A4I8u8dx1uTiHoqo/0GKSYvnEi3h7VRwp+zOC36yqdFfkcuLt95xzmOLx8SafwPFEDieeh3pYmGtFJwUZv4a1Wn2f5O5B+FC1ckf/uYwRbempFwZcQ8Nhzrc1rhINX/vhw4SwSJHaieAjIywcinmREvo+7o8yXVpu6yxBoFg4AZK6Kn5KrF1ItjXWzxFn8PYWRnkY3mYLuXwYJvrfWyvqJiQ8fExOrdi85T5oEME3R9bBMGfiLQpu0g7uOGXzTJJwWxoM7d1n5Epfpm4sfghnoI5pGUx23DvttDFcHdNqRRwXR7yYNAcpEvpKnVw0DW6VaNQyArsRSw9aUFERoVRto9H379LbWhZWaQc+JBGP9grSIrnG9XF6u2MMm3cbDUFIWfe3WoLSQ5wse3vDWE97t1cPKFOO/MJdA==';

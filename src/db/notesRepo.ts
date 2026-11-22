@@ -281,6 +281,38 @@ export function createNotesRepo(db: Db, { now, newId }: Deps) {
       return old.length;
     },
 
+    /** Toutes les notes, corbeille et archives comprises (sauvegarde). */
+    async exportAll(): Promise<Note[]> {
+      const rows = await db.all<Row>(`SELECT ${COLUMNS} FROM notes ORDER BY created_at, id`);
+      return rows.map(toNote);
+    },
+
+    /**
+     * Remplace toutes les notes par celles d'une sauvegarde (restauration), d'un seul bloc :
+     * en cas de problème, rien n'est changé. Les tags et l'index de recherche sont recalculés.
+     */
+    async replaceAll(notes: Note[]): Promise<void> {
+      await db.transaction(async () => {
+        await db.run('DELETE FROM notes');
+        await db.run('DELETE FROM notes_fts');
+        await db.run('DELETE FROM note_tags');
+        for (const n of notes) {
+          await db.run(`INSERT INTO notes (${COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+            n.id,
+            n.title,
+            n.body,
+            n.parentId,
+            n.pinned ? 1 : 0,
+            n.createdAt,
+            n.updatedAt,
+            n.deletedAt,
+            n.archivedAt,
+          ]);
+          await writeIndex(n.id, n.title, n.body);
+        }
+      });
+    },
+
     /** Efface toutes les notes (écran Compte, « Effacer toutes les données »). */
     async wipe(): Promise<void> {
       await db.transaction(async () => {

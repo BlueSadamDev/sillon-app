@@ -1,5 +1,16 @@
-// Réglages du banc d'essai « Chiffrement » et « Dossier pCloud » (lot 0).
-// Aucun réglage en dur dans les écrans : tout est ici.
+// Réglages de la sauvegarde (lot 2) et des bancs d'essai du lot 0.
+// Aucun réglage en dur ailleurs : tout est ici.
+
+/**
+ * Calcul de la clé de sauvegarde : Argon2id 3 passes, 256 Mo (≈ 1,2 s sur le S21, lot 0).
+ * Fait une seule fois à la configuration, puis à chaque restauration.
+ */
+export const BACKUP_KDF = { opsLimit: 3, memLimit: 256 * 1024 * 1024 } as const;
+
+/** Repli si le téléphone manque de mémoire : 3 passes, 128 Mo (≈ 0,6 s). */
+export const BACKUP_KDF_FALLBACK = { opsLimit: 3, memLimit: 128 * 1024 * 1024 } as const;
+
+// --- Bancs d'essai du lot 0 ---
 
 /** Profils Argon2id mesurés sur le téléphone (opsLimit = nombre de passes, memLimit en octets). */
 export const KDF_PROFILES = [
