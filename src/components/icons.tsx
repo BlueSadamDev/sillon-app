@@ -61,3 +61,15 @@ export const PlusIcon = (p: IconProps) => (
 export const BackIcon = (p: IconProps) => (
   <Icon {...p}>{(c) => <Path d="M15 5 L8 12 L15 19" stroke={c} {...line} />}</Icon>
 );
+
+export const MoreIcon = (p: IconProps) => (
+  <Icon {...p}>
+    {(c) => (
+      <>
+        <Circle cx={5.5} cy={12} r={1.4} fill={c} />
+        <Circle cx={12} cy={12} r={1.4} fill={c} />
+        <Circle cx={18.5} cy={12} r={1.4} fill={c} />
+      </>
+    )}
+  </Icon>
+);

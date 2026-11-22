@@ -35,3 +35,11 @@ export function greeting(now: Date): string {
   const h = now.getHours();
   return h >= 18 || h < 5 ? 'Bonsoir' : 'Bonjour';
 }
+
+/** Fin de la phrase « Modifiée … » : « aujourd’hui à 14:05 », « hier », « le 12 nov. ». */
+export function modifiedWhen(time: number, now: Date): string {
+  const short = shortDate(time, now);
+  if (sameDay(new Date(time), now)) return `aujourd’hui à ${short}`;
+  if (short === 'Hier') return 'hier';
+  return `le ${short}`;
+}

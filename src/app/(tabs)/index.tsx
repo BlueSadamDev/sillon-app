@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAccount } from '@/account/AccountProvider';
 import { InsightCard, NoteRow, PinnedCard, QuickCapture, SectionLabel } from '@/components/notes';
+import { notesChanged } from '@/db/events';
 import { openNotes } from '@/db/expoDb';
 import { useNotesQuery } from '@/db/useNotes';
 import { splitCapture } from '@/notes/capture';
@@ -14,7 +15,7 @@ import { colors, font, space, TOUCH, type } from '@/theme';
 
 export default function Home() {
   const { username } = useAccount();
-  const [data, refresh] = useNotesQuery(
+  const [data] = useNotesQuery(
     async (repo) => ({ pinned: await repo.pinned(), recent: await repo.recent() }),
     { pinned: [], recent: [] },
   );
@@ -28,8 +29,8 @@ export default function Home() {
     if (!parts) return;
     const repo = await openNotes();
     const note = await repo.create({ title: parts.title, body: parts.body });
-    if (parts.openEditor) router.push({ pathname: '/note/[id]', params: { id: note.id } });
-    else refresh();
+    if (parts.openEditor) router.push({ pathname: '/note/[id]', params: { id: note.id, mode: 'write' } });
+    else notesChanged();
   }
 
   const open = (id: string) => router.push({ pathname: '/note/[id]', params: { id } });

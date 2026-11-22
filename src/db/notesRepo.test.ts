@@ -128,6 +128,18 @@ describe('base des notes', () => {
     expect(await repo.tags(n.id)).toEqual([]);
   });
 
+  it('efface une note laissée vide, mais pas une note écrite ni une note avec sous-notes', async () => {
+    const { repo } = await setup();
+    const empty = await repo.create();
+    expect(await repo.removeIfEmpty(empty.id)).toBe(true);
+    expect(await repo.get(empty.id)).toBeNull();
+    const written = await repo.create({ body: 'texte' });
+    expect(await repo.removeIfEmpty(written.id)).toBe(false);
+    const parent = await repo.create();
+    await repo.create({ title: 'Enfant', parentId: parent.id });
+    expect(await repo.removeIfEmpty(parent.id)).toBe(false);
+  });
+
   it('efface toutes les notes', async () => {
     const { repo } = await setup();
     await repo.create(FAKE_NOTES.jardin);

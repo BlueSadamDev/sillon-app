@@ -8,6 +8,7 @@ import { CreateAccount } from '@/account/ui/CreateAccount';
 import { OfferBiometrics } from '@/account/ui/OfferBiometrics';
 import { Unlock } from '@/account/ui/Unlock';
 import { StartupScreen } from '@/components/StartupScreen';
+import { ToastProvider } from '@/components/Toast';
 import { t } from '@/texts/fr';
 import { colors, FONT_FILES } from '@/theme';
 
@@ -17,7 +18,7 @@ export default function RootLayout() {
     <AccountProvider>
       <StatusBar style="dark" />
       {/* Si la police ne se charge pas, l'app démarre quand même avec celle du téléphone. */}
-      {fontsLoaded || fontError ? <Gate /> : <StartupScreen />}
+      <ToastProvider>{fontsLoaded || fontError ? <Gate /> : <StartupScreen />}</ToastProvider>
     </AccountProvider>
   );
 }

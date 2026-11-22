@@ -204,6 +204,23 @@ export function createNotesRepo(db: Db, { now, newId }: Deps) {
       });
     },
 
+    /**
+     * Efface une note laissée vide (ni titre ni contenu, sans sous-note) quand on la quitte.
+     * Renvoie true si elle a été effacée.
+     */
+    async removeIfEmpty(id: string): Promise<boolean> {
+      const note = await get(id);
+      if (!note || note.title.trim() !== '' || note.body.trim() !== '') return false;
+      const child = await db.first<{ id: string }>('SELECT id FROM notes WHERE parent_id = ? LIMIT 1', [id]);
+      if (child) return false;
+      await db.transaction(async () => {
+        await db.run('DELETE FROM notes WHERE id = ?', [id]);
+        await db.run('DELETE FROM notes_fts WHERE id = ?', [id]);
+        await db.run('DELETE FROM note_tags WHERE note_id = ?', [id]);
+      });
+      return true;
+    },
+
     /** Efface définitivement une note de la corbeille. */
     async deleteForever(id: string): Promise<void> {
       await db.transaction(async () => {

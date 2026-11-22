@@ -1,4 +1,4 @@
-import { greeting, longDate, shortDate } from './dates';
+import { greeting, longDate, modifiedWhen, shortDate } from './dates';
 
 const NOW = new Date(2026, 10, 22, 15, 30); // dimanche 22 novembre 2026, 15 h 30
 
@@ -12,6 +12,11 @@ describe('dates', () => {
     expect(shortDate(new Date(2026, 10, 21, 23, 0).getTime(), NOW)).toBe('Hier');
     expect(shortDate(new Date(2026, 10, 12).getTime(), NOW)).toBe('12 nov.');
     expect(shortDate(new Date(2025, 1, 3).getTime(), NOW)).toBe('3 févr. 2025');
+  });
+  it('dit quand une note a été modifiée', () => {
+    expect(modifiedWhen(new Date(2026, 10, 22, 9, 5).getTime(), NOW)).toBe('aujourd’hui à 09:05');
+    expect(modifiedWhen(new Date(2026, 10, 21).getTime(), NOW)).toBe('hier');
+    expect(modifiedWhen(new Date(2026, 10, 12).getTime(), NOW)).toBe('le 12\u00a0nov.');
   });
   it('salue selon l’heure', () => {
     expect(greeting(NOW)).toBe('Bonjour');
