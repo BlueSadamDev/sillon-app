@@ -43,7 +43,9 @@
       ],
       "react-native-libsodium",
       "llama.rn",
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-secure-store",
+      "expo-local-authentication"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -1,25 +1,49 @@
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useState } from 'react';
 
+import { AccountProvider, useAccount } from '@/account/AccountProvider';
+import { CreateAccount } from '@/account/ui/CreateAccount';
+import { OfferBiometrics } from '@/account/ui/OfferBiometrics';
+import { Unlock } from '@/account/ui/Unlock';
 import { StartupScreen } from '@/components/StartupScreen';
 import { t } from '@/texts/fr';
 import { colors, FONT_FILES } from '@/theme';
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(FONT_FILES);
-  // Si la police ne se charge pas, l'app démarre quand même avec celle du téléphone.
-  if (!fontsLoaded && !fontError) return <StartupScreen />;
+  return (
+    <AccountProvider>
+      <StatusBar style="dark" />
+      {/* Si la police ne se charge pas, l'app démarre quand même avec celle du téléphone. */}
+      {fontsLoaded || fontError ? <Gate /> : <StartupScreen />}
+    </AccountProvider>
+  );
+}
+
+/** Choisit quoi montrer selon le compte : création, empreinte, déverrouillage ou l'app. */
+function Gate() {
+  const { status, offerBiometrics } = useAccount();
+  // L'app n'est construite qu'après le premier déverrouillage ; ensuite, le verrou se pose par-dessus.
+  const [opened, setOpened] = useState(false);
+  if (status === 'unlocked' && !opened) setOpened(true);
+
+  if (status === 'loading') return <StartupScreen />;
+  if (status === 'none') return <CreateAccount />;
+  if (status === 'unlocked' && offerBiometrics) return <OfferBiometrics />;
   return (
     <>
-      <StatusBar style="dark" />
-      <Stack screenOptions={{ contentStyle: { backgroundColor: colors.bg } }}>
-        <Stack.Screen name="index" options={{ title: t.home.title }} />
-        <Stack.Screen name="essai-pcloud" options={{ title: t.pcloud.title }} />
-        <Stack.Screen name="essai-chiffrement" options={{ title: t.crypto.title }} />
-        <Stack.Screen name="essai-markdown" options={{ title: t.markdown.title }} />
-        <Stack.Screen name="essai-embeddings" options={{ title: t.embeddings.title }} />
-      </Stack>
+      {opened && (
+        <Stack screenOptions={{ contentStyle: { backgroundColor: colors.bg } }}>
+          <Stack.Screen name="index" options={{ title: t.home.title }} />
+          <Stack.Screen name="essai-pcloud" options={{ title: t.pcloud.title }} />
+          <Stack.Screen name="essai-chiffrement" options={{ title: t.crypto.title }} />
+          <Stack.Screen name="essai-markdown" options={{ title: t.markdown.title }} />
+          <Stack.Screen name="essai-embeddings" options={{ title: t.embeddings.title }} />
+        </Stack>
+      )}
+      {status === 'locked' && <Unlock />}
     </>
   );
 }
