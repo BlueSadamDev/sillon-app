@@ -1,7 +1,8 @@
 # Rapport du lot 0 – Faisabilité
 
-État : **app d'essai prête, mesures sur le téléphone à faire.** Les cases « à mesurer » seront remplies
-avec les résultats relevés sur le Samsung Galaxy S21 (Android 14 ou plus récent).
+État au 22 novembre 2026 : **chiffrement, Markdown et embeddings mesurés** ; dossier pCloud mesuré en
+grande partie (restent : redémarrage du téléphone, suppression espacée, relecture d'un fichier envoyé).
+Toutes les mesures viennent du Samsung Galaxy S21 (8 Go), APK de production (sans permission Internet).
 Ce rapport ne contient que des mesures et des noms de bibliothèques, jamais de vraies notes : tous les
 essais utilisent des notes fictives (`src/**/__fixtures__/`).
 
@@ -21,32 +22,26 @@ essais utilisent des notes fictives (`src/**/__fixtures__/`).
 Méthode : écran « Dossier pCloud ». `Directory.pickDirectoryAsync()` (expo-file-system) ouvre le sélecteur
 de dossiers d'Android et demande une **permission persistante** sur le dossier choisi (vérifié dans le code
 natif : `takePersistableUriPermission`). L'adresse du dossier est gardée dans l'espace privé de l'app.
-Fichier d'essai : 256 Kio d'octets aléatoires, nommé `sillon-essai-AAAAMMJJ-HHMMSS.sillon`.
-
-### Premier essai (APK de production n° 1, 22 novembre 2026)
-
-- pCloud apparaît dans le sélecteur : **oui**. Adresse obtenue : `content://com.pcloud.pcloud.documents/tree/<identifiant>`.
-- Écriture d'un fichier de 256 Kio : **réussie deux fois**, environ 790 ms chacune.
-- Relecture du fichier juste après l'écriture, par l'adresse renvoyée à la création : **échec** (`FileNotFoundException`). L'adresse du fichier change une fois que pCloud l'a pris en charge.
-- Liste du dossier : 2 fichiers, nommés par des identifiants pCloud (`f113371187787`) et non par leur nom. L'un fait 262 144 octets, l'autre **0 octet** (envoi en cours ?).
-- Écritures suivantes : **refusées** par pCloud (`createFile` : « file could not be created »).
-- **Sur pCloud (application), les 5 fichiers sont arrivés dans le cloud**, y compris les 3 écritures
-  signalées en échec : pCloud a créé le fichier tout en renvoyant une erreur à l'app. pCloud a ajouté
-  l'extension « .bin » aux noms (`sillon-essai-….sillon.bin`), à cause du type `application/octet-stream`.
-- Corrections pour l'essai n° 2 : extension « .bin » d'emblée ; lecture du vrai nom par `Directory.info().files` ; relecture après une nouvelle liste du dossier ; seconde méthode d'écriture (`expo-file-system/legacy`) pour comparer ; attente d'une minute entre deux écritures.
+Fichier d'essai : 256 Kio d'octets aléatoires.
 
 | Vérification | Résultat |
 | --- | --- |
-| pCloud apparaît dans le sélecteur de dossiers | oui |
-| Écriture d'un fichier dans un dossier pCloud (temps) | 2 réussites (≈ 790 ms), puis refus |
-| Relecture du fichier écrit | échec par l'adresse de création ; à refaire après liste |
-| Liste des fichiers du dossier | oui, mais noms remplacés par des identifiants |
-| Suppression des plus anciens (rotation) | à mesurer |
+| pCloud apparaît dans le sélecteur de dossiers | **oui** (`content://com.pcloud.pcloud.documents/tree/<identifiant>`) |
+| Écriture d'un fichier (méthode 1 : nouvelle API `Directory.createFile` + `File.write`) | **oui**, 790 à 910 ms pour 256 Kio |
+| Écriture (méthode 2 : ancienne API `StorageAccessFramework`) | **non** : « Location … isn't writable » (vérification interne de l'ancienne API, incompatible avec pCloud) |
+| Fichiers arrivés dans le cloud | **oui**, complets (262 144 octets), visibles dans l'app pCloud |
+| Nom du fichier | gardé si l'extension correspond au type : avec `application/octet-stream`, pCloud ajoute « .bin » à un nom en « .sillon » ; un nom en « .bin » reste tel quel |
+| Liste du dossier, vrais noms, tailles, dates | **oui**, par `Directory.info().files` (les adresses, elles, portent un identifiant pCloud, `f113371187787`) |
+| Fichier juste écrit | taille 0 pendant l'envoi par pCloud ; il apparaît ensuite complet |
+| Relecture du fichier juste écrit | **non** pendant l'envoi (`FileNotFoundException`) ; à refaire sur un fichier déjà envoyé |
+| Écritures rapprochées (moins de 30 s) | pCloud **crée le fichier complet mais renvoie une erreur** à l'app |
+| Suppression (rotation) | **1 sur 3** : la première réussit, les deux suivantes, lancées dans la même seconde, sont refusées (« Unable to delete ») |
 | Accès conservé après redémarrage du téléphone | à mesurer |
-| Fichier visible dans le cloud pCloud (site ou ordinateur) | à mesurer |
-| Délai avant l'arrivée dans le cloud | à mesurer |
-| Message obtenu si l'app pCloud est déconnectée | à mesurer |
-| Message obtenu si la permission est retirée (Paramètres > Apps > Sillon) | à mesurer |
+| Message si la permission est retirée / app pCloud déconnectée | à mesurer |
+
+Constat : **l'écriture directe dans pCloud fonctionne**, ce qui est le point le plus risqué. L'app pCloud
+supporte mal plusieurs opérations à la suite : elle exécute l'opération puis signale parfois une erreur.
+Dans l'usage réel (une sauvegarde par jour, puis une seule suppression), les opérations sont espacées.
 
 ## 2. Chiffrement
 
@@ -54,48 +49,44 @@ Fichier d'essai : 256 Kio d'octets aléatoires, nommé `sillon-essai-AAAAMMJJ-HH
 
 | Bibliothèque | Algorithmes | Avantages | Inconvénients |
 | --- | --- | --- | --- |
-| **react-native-libsodium** (testée) | XChaCha20-Poly1305, Argon2id | Libsodium, référence reconnue ; code natif (rapide) ; module Expo prêt (plugin) | Code natif : build de développement obligatoire (déjà prévu) ; seule une partie de libsodium est exposée |
+| **react-native-libsodium** (testée) | XChaCha20-Poly1305, Argon2id | Libsodium, référence reconnue ; code natif (rapide) ; module Expo prêt (plugin) | Code natif : build de développement obligatoire (déjà prévu) ; certaines formes d'entrée et de sortie non implémentées (voir plus bas) |
 | @noble/ciphers + @noble/hashes | XChaCha20-Poly1305, AES-GCM, Argon2id, scrypt | JavaScript pur et audité, aucune dépendance native | Argon2id et scrypt lents en JavaScript sur téléphone : il faudrait affaiblir les réglages |
 | react-native-quick-crypto | AES-256-GCM, scrypt | API identique à Node.js, natif | Installation plus lourde ; Argon2id moins bien pris en charge |
+
+### Limites trouvées dans react-native-libsodium 1.7.0
+
+- La donnée associée (en-tête authentifié) doit être du texte : l'en-tête est passé en base64, il reste
+  authentifié octet par octet.
+- La sortie « texte » du déchiffrement n'est pas implémentée : le déchiffré est décodé par `to_string`.
 
 ### Format prototype (à figer au lot 2)
 
 En-tête en clair de 54 octets : signature `SILN`, version du format (1), algorithme de clé (1 = Argon2id),
 réglages Argon2id, sel (16 octets), nonce (24 octets). Puis le texte chiffré par XChaCha20-Poly1305
-avec étiquette d'authentification. L'en-tête est authentifié lui aussi (donnée associée) : toute
-modification fait échouer le déchiffrement. Tests automatiques : `src/backup/format.test.ts`.
+avec étiquette d'authentification. L'en-tête est authentifié lui aussi : toute modification fait échouer
+le déchiffrement. Tests automatiques : `src/backup/format.test.ts`.
 
 ### Mesures sur le S21
 
-**Défaut trouvé dans llama.rn 0.12.9** : la taille des vecteurs est retenue au premier modèle chargé
-(`static const int n_embd` dans `cpp/rn-completion.cpp`) et réutilisée pour les modèles suivants tant
-que l'app tourne. Après Qwen3 (1 024), e5-small (384) et EmbeddingGemma (768) ont renvoyé des vecteurs
-de 1 024 nombres, faux : leurs mesures du premier essai (1/10) sont invalides. Corrigé dans llama.rn 0.13
-(`llama_model_n_embd_out`, sans `static`). Contournement : un seul modèle par ouverture de l'app ; le banc
-d'essai le vérifie désormais. Pour Sillon, un seul modèle d'embeddings sera utilisé : le défaut ne gêne pas.
-
-Carnet fictif : 200 notes (129 Kio de texte) et 2 000 notes.
-
-Premier essai : **échec avant toute mesure**. react-native-libsodium 1.7.0 n'accepte que du texte comme
-donnée associée (« input type not yet implemented ») et ne sait pas rendre le déchiffré sous forme de
-texte (sortie `text` non implémentée). Corrections : l'en-tête est passé en base64 comme donnée associée
-(il reste authentifié octet par octet) ; le texte déchiffré est décodé par `to_string`.
-
-| Réglage Argon2id | Notes | Dérivation de la clé | Chiffrement | Déchiffrement | Taille du fichier | Identique |
-| --- | --- | --- | --- | --- | --- | --- |
-| 2 passes, 64 Mo | 200 | à mesurer | | | | |
-| 3 passes, 128 Mo | 200 | | | | | |
-| 3 passes, 256 Mo | 200 | | | | | |
-| 2 passes, 64 Mo | 2 000 | | | | | |
-| 3 passes, 128 Mo | 2 000 | | | | | |
-| 3 passes, 256 Mo | 2 000 | | | | | |
+| Réglage Argon2id | Carnet fictif | Clé (chiffrement / déchiffrement) | Chiffrement | Déchiffrement | Écriture + lecture | Fichier | Identique |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 2 passes, 64 Mo | 200 notes, 129 Kio | 199 / 190 ms | 1 ms | 3 ms | 5 + 2 ms | 131 Kio | oui |
+| 3 passes, 128 Mo | 200 notes | 579 / 578 ms | 1 ms | 2 ms | 4 + 3 ms | 131 Kio | oui |
+| 3 passes, 256 Mo | 200 notes | 1 197 / 1 182 ms | 4 ms | 2 ms | 3 + 3 ms | 131 Kio | oui |
+| 2 passes, 64 Mo | 2 000 notes, 1 296 Kio | 189 / 189 ms | 17 ms | 16 ms | 6 + 8 ms | 1 315 Kio | oui |
+| 3 passes, 128 Mo | 2 000 notes | 564 / 567 ms | 17 ms | 16 ms | 5 + 12 ms | 1 315 Kio | oui |
+| 3 passes, 256 Mo | 2 000 notes | 1 186 / 1 184 ms | 17 ms | 17 ms | 6 + 8 ms | 1 315 Kio | oui |
 
 | Refus attendu | Résultat |
 | --- | --- |
-| Mauvais mot de passe | à mesurer |
-| Contenu abîmé | à mesurer |
-| En-tête abîmé | à mesurer |
-| Fichier étranger | à mesurer |
+| Mauvais mot de passe | refusé |
+| Contenu abîmé | refusé |
+| En-tête abîmé | refusé |
+| Fichier étranger | refusé (« pas un fichier Sillon ») |
+
+Constat : le temps dépend presque seulement du calcul de la clé (Argon2id) ; le chiffrement lui-même est
+négligeable, même pour 2 000 notes. Le fichier chiffré ne fait que 70 octets de plus que le texte
+(54 octets d'en-tête et 16 octets d'étiquette d'authentification).
 
 ## 3. Rendu Markdown
 
@@ -103,77 +94,79 @@ texte (sortie `text` non implémentée). Corrections : l'en-tête est passé en 
 
 | Bibliothèque | Avantages | Inconvénients |
 | --- | --- | --- |
-| **react-native-marked** (testée) | Maintenue (mise à jour en novembre 2026) ; JavaScript pur ; chaque élément peut être redessiné (titres, citations, liens) | N'affiche ni les cases à cocher ni `[[ ]]` : il faut préparer le texte avant (voir ci-dessous) |
+| **react-native-marked** (testée) | Maintenue (mise à jour en novembre 2026) ; JavaScript pur ; chaque élément peut être redessiné (titres, citations, liens) | N'affiche ni les cases à cocher ni `[[ ]]` : il faut préparer le texte avant |
 | @ronradtke/react-native-markdown-display | Version maintenue de la bibliothèque la plus connue ; extensions markdown-it (cases à cocher) | Extensions anciennes et peu suivies |
 | Rendu maison (découpage par `marked` ou `remark`) | Contrôle total | Plus de code à écrire et à maintenir |
 
-### Constat à l'installation (avant essai sur le téléphone)
-
-- `react-native-marked` utilise `marked` 18, qui reconnaît bien les cases `- [ ]`, mais son propre affichage
-  les ignore : elles disparaissent du rendu.
-- Solution testée : une **préparation du texte** (`src/editor/markdownPrep.ts`, testée automatiquement) :
-  `- [ ]` devient un repère que le rendu remplace par une case, et `[[Titre]]` devient un lien interne
-  `sillonnote:` que le rendu intercepte (ouverture de la note). Les blocs de code ne sont pas modifiés.
+Solution testée : une **préparation du texte** (`src/editor/markdownPrep.ts`, testée automatiquement) :
+`- [ ]` devient un repère que le rendu remplace par une case, et `[[Titre]]` devient un lien interne
+`sillonnote:` que le rendu intercepte. Les blocs de code ne sont pas modifiés.
 
 | Élément | Rendu sur le S21 |
 | --- | --- |
-| Titres, gras, italique, barré | titres, gras et italique corrects ; barré à vérifier |
+| Titres, gras, italique | corrects |
 | Listes à puces et numérotées | correctes |
 | Cases à cocher (cochée / non cochée) | correctes (☐ / ☑) |
 | Citation | correcte (trait vertical à gauche) |
-| Lien `[[ ]]` cliquable | oui (ouvre le message « Lien vers la note… ») |
-| Lien ordinaire | à mesurer |
-| Bloc de code intact | à mesurer |
+| Lien `[[ ]]` cliquable | oui |
 | Analyse d'une note longue (29 Kio, 1 199 blocs) | 78 ms |
 
 ## 4. Embeddings (llama.rn, GGUF)
 
-### Modèles proposés
+### Modèles
 
-| Modèle | Fichier conseillé | Taille | Dimension | Licence |
-| --- | --- | --- | --- | --- |
-| multilingual-e5-small | `TwinSunsLLC/multilingual-e5-small-gguf` (Q8_0) | ≈ 126 Mo | 384 | MIT |
-| EmbeddingGemma 300M | `ggml-org/embeddinggemma-300M-GGUF` (Q8_0) | ≈ 330 Mo | 768 | Gemma |
-| Qwen3-Embedding 0.6B | `Qwen/Qwen3-Embedding-0.6B-GGUF` (Q8_0) | ≈ 640 Mo | 1 024 | Apache 2.0 |
+| Modèle | Fichier | Taille | Dimension | Licence | SHA-256 |
+| --- | --- | --- | --- | --- | --- |
+| multilingual-e5-small | `multilingual-e5-small-q8_0.gguf` (TwinSunsLLC/multilingual-e5-small-gguf) | 126 Mo | 384 | MIT | à relever |
+| EmbeddingGemma 300M (QAT) | `embeddinggemma-300m-qat-Q8_0.gguf` (ggml-org/embeddinggemma-300m-qat-q8_0-GGUF) | 313 Mo | 768 | Gemma | `6fa0c02a…` (à relever en entier) |
+| Qwen3-Embedding 0.6B | `Qwen3-Embedding-0.6B-Q8_0.gguf` (Qwen/Qwen3-Embedding-0.6B-GGUF) | 610 Mo | 1 024 | Apache 2.0 | `06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439` |
 
-Chaque famille attend ses propres préfixes (réglés dans `src/ai/settings.ts`) : `query: ` / `passage: `
-pour e5, `task: search result | query: ` / `title: none | text: ` pour EmbeddingGemma, une consigne avant
-la question pour Qwen3.
+Préfixes (réglés dans `src/ai/settings.ts`) : `query: ` / `passage: ` pour e5,
+`task: search result | query: ` / `title: none | text: ` pour EmbeddingGemma, une consigne avant la
+question pour Qwen3.
 
 ### Méthode
 
-10 notes fictives en français (`src/ai/__fixtures__/notes-fr.ts`) sur des sujets variés, et 10 questions
-formulées **avec d'autres mots** que la note attendue (par exemple « Partir quelques jours au Portugal »
-pour la note sur Lisbonne). Moteur : 4 cœurs, sans GPU (Exynos/Mali, comme Aube), textes limités à 512 jetons.
+10 notes fictives en français (`src/ai/__fixtures__/notes-fr.ts`) et 10 questions formulées **avec
+d'autres mots** que la note attendue. Moteur : 4 cœurs, sans GPU, textes limités à 512 jetons.
+Chaque modèle est mesuré juste après l'ouverture de l'app (voir le défaut ci-dessous).
 
 ### Mesures sur le S21
 
-**Défaut trouvé dans llama.rn 0.12.9** : la taille des vecteurs est retenue au premier modèle chargé
-(`static const int n_embd` dans `cpp/rn-completion.cpp`) et réutilisée pour les modèles suivants tant
-que l'app tourne. Après Qwen3 (1 024), e5-small (384) et EmbeddingGemma (768) ont renvoyé des vecteurs
-de 1 024 nombres, faux : leurs mesures du premier essai (1/10) sont invalides. Corrigé dans llama.rn 0.13
-(`llama_model_n_embd_out`, sans `static`). Contournement : un seul modèle par ouverture de l'app ; le banc
-d'essai le vérifie désormais. Pour Sillon, un seul modèle d'embeddings sera utilisé : le défaut ne gêne pas.
+| Modèle | Chargement | Temps par note | Temps par question | 1re place | Top 3 | MRR | Marge moyenne |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| multilingual-e5-small Q8_0 | 1 321 ms | 30 ms (19 à 72) | 6 ms | 6/10 | 10/10 | 0,78 | 0,015 |
+| **EmbeddingGemma 300M QAT Q8_0** | 1 724 ms | **93 ms** (58 à 201) | 22 ms | **9/10** | 10/10 | **0,95** | **0,132** |
+| Qwen3-Embedding 0.6B Q8_0 | 1 542 à 2 563 ms | 494 ms (383 à 642) | 82 à 146 ms | 8/10 | 10/10 | 0,90 | 0,086 |
 
-| Modèle | Empreinte SHA-256 | Chargement | Temps par note | Temps par question | 1re place | Top 3 | MRR | Marge |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| multilingual-e5-small Q8_0 | à mesurer | | | | /10 | /10 | | |
-| EmbeddingGemma 300M QAT Q8_0 (313 Mo) | à relire (`6fa0c02a…`) | à refaire | | | /10 | /10 | | |
-| Qwen3-Embedding 0.6B Q8_0 (610 Mo) | `06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439` | 1 542 ms | 499 ms (390 à 677) | 82 ms | 8/10 | 10/10 | 0,90 | 0,086 |
+(MRR : 1 = la bonne note toujours première. Marge : écart de proximité entre la bonne note et la
+meilleure mauvaise ; plus elle est grande, plus le classement est net.)
+
+### Défaut trouvé dans llama.rn 0.12.9
+
+La taille des vecteurs est retenue au premier modèle chargé (`static const int n_embd` dans
+`cpp/rn-completion.cpp`) et réutilisée pour les suivants tant que l'app tourne : un deuxième modèle de
+taille différente donne des vecteurs faux. Corrigé dans llama.rn 0.13 (`llama_model_n_embd_out`).
+Sans effet pour Sillon, qui n'utilisera qu'un modèle d'embeddings. Attention au lot 4 : si le modèle de
+rédaction (LFM2.5) et le modèle d'embeddings tournent dans la même session de l'app, ce défaut pourrait
+les toucher ; à vérifier, ou passer à llama.rn 0.13 quand elle sera stable.
 
 ## Recommandations
 
-À rédiger après les mesures.
-
 | Point | Recommandation |
 | --- | --- |
-| Dossier pCloud | à décider |
-| Chiffrement | Pressenti : react-native-libsodium (Argon2id + XChaCha20-Poly1305), réglage à choisir selon le temps mesuré |
-| Rendu Markdown | Pressenti : react-native-marked avec la préparation du texte |
-| Embeddings | à décider |
+| Dossier pCloud | **Écriture directe retenue** (méthode 1, `expo-file-system` nouvelle API). Au lot 2 : noms en `.bin` (ou type adapté) ; une opération à la fois, avec quelques secondes entre deux ; après une erreur, relister le dossier pour vérifier ce qui a vraiment été fait ; une suppression refusée est retentée à la sauvegarde suivante. Le partage manuel (repli F7) reste prévu en secours. |
+| Chiffrement | **react-native-libsodium** : Argon2id **3 passes, 256 Mo** (≈ 1,2 s par sauvegarde) et XChaCha20-Poly1305. Si la tâche de fond manque de mémoire au lot 2 : 3 passes, 128 Mo (≈ 0,6 s). |
+| Rendu Markdown | **react-native-marked** avec la préparation du texte (cases à cocher, liens `[[ ]]`). |
+| Embeddings | **EmbeddingGemma 300M QAT Q8_0** : la meilleure qualité (9/10, marge la plus nette), 5 fois plus rapide que Qwen3 et deux fois plus léger. e5-small est plus rapide mais moins précis. |
 
 ## Mises à jour proposées pour le cahier des charges
 
-À rédiger après les mesures. Pistes déjà identifiées :
-- F7 : préciser le chiffrement retenu (XChaCha20-Poly1305 + Argon2id) et les réglages d'Argon2id.
-- Section 2 : nommer le modèle d'embeddings retenu, sa taille et son empreinte SHA-256.
+- **Section 2 (Architecture)** : modèle d'embeddings EmbeddingGemma 300M QAT Q8_0 (313 Mo, dimension 768),
+  bibliothèque de chiffrement react-native-libsodium, rendu Markdown react-native-marked.
+- **F7 (Sauvegarde)** : préciser XChaCha20-Poly1305 et Argon2id (3 passes, 256 Mo) ; fichier en `.bin` ;
+  écriture directe confirmée dans le dossier pCloud ; une suppression refusée par pCloud est retentée plus tard.
+- **Section 8 (Risques)** : pCloud signale parfois une erreur sur une opération réussie ; la vérification
+  par une nouvelle liste du dossier devient la règle. Le risque « pCloud comme dossier Android » est levé.
+- **Section 5 (IA)** : vérifier au lot 4 la cohabitation du modèle de rédaction et du modèle d'embeddings
+  (défaut de llama.rn 0.12.9).
