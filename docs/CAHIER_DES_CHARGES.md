@@ -1,7 +1,7 @@
 # Cahier des charges – Sillon
 
 Nom de l'app : **Sillon** (application de notes personnelle avec IA locale).
-Version : 0.2 (21 novembre 2026). Changement par rapport à la 0.1 : plus de serveur, tout se passe sur le téléphone ; sauvegarde chiffrée par l'app dans un dossier pCloud ; compte local.
+Version : 0.3 (22 novembre 2026). Changement par rapport à la 0.2 : choix techniques du lot 0 (voir `docs/RAPPORT_LOT_0.md`) : modèle d'embeddings, bibliothèques de chiffrement et de rendu Markdown, règles d'écriture dans pCloud.
 
 ## 1. Contexte et objectifs
 
@@ -16,9 +16,9 @@ Version : 0.2 (21 novembre 2026). Changement par rapport à la 0.1 : plus de ser
 
 | Élément | Rôle | Technologie |
 | --- | --- | --- |
-| App Android | Saisie, lecture, recherche, IA, sauvegarde | Expo (React Native, TypeScript), SQLite local, APK construit par GitHub Actions |
-| IA locale | Embeddings (recherche par le sens) et rédaction des insights | llama.rn ; modèle de rédaction LFM2.5 1.2B (validé sur Aube) ; petit modèle d'embeddings à choisir au lot 0 |
-| Sauvegarde | Copie chiffrée hors du téléphone | Fichier chiffré par l'app, écrit dans un **dossier pCloud choisi une fois** via le sélecteur de dossiers d'Android (l'app pCloud joue le rôle de « fournisseur de fichiers ») |
+| App Android | Saisie, lecture, recherche, IA, sauvegarde | Expo (React Native, TypeScript), SQLite local, rendu Markdown par react-native-marked, APK construit par GitHub Actions |
+| IA locale | Embeddings (recherche par le sens) et rédaction des insights | llama.rn ; modèle de rédaction LFM2.5 1.2B (validé sur Aube) ; modèle d'embeddings EmbeddingGemma 300M QAT Q8_0 (313 Mo, choisi au lot 0) |
+| Sauvegarde | Copie chiffrée hors du téléphone | Fichier chiffré par l'app, écrit dans un **dossier pCloud choisi une fois** via le sélecteur de dossiers d'Android (l'app pCloud joue le rôle de « fournisseur de fichiers ») ; chiffrement par react-native-libsodium |
 
 L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier dans le dossier pCloud, c'est l'app pCloud qui l'envoie dans le cloud.
 
@@ -78,9 +78,11 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 ### F7 – Sauvegarde chiffrée vers pCloud
 - **Configuration (une fois)** : l'utilisateur choisit un dossier dans pCloud avec le sélecteur de dossiers d'Android, puis crée son **mot de passe de sauvegarde** (deux fois), avec un avertissement : sans lui, la sauvegarde est illisible ; le noter dans un gestionnaire de mots de passe.
 - **Contenu** : toutes les notes, l'arborescence, les tags, la corbeille, les réglages (hors mot de passe du compte et fichiers de modèle IA).
-- **Chiffrement** dans l'app avant écriture : chiffrement standard authentifié (AES-256-GCM ou XChaCha20-Poly1305), clé dérivée du mot de passe de sauvegarde (Argon2id ou scrypt). Bibliothèque choisie au lot 0.
+- **Chiffrement** dans l'app avant écriture : XChaCha20-Poly1305 (chiffrement authentifié), clé dérivée du mot de passe de sauvegarde par Argon2id (3 passes, 256 Mo ; environ 1,2 s sur le S21). Bibliothèque : react-native-libsodium (choisie au lot 0). Repli si la tâche de fond manque de mémoire : Argon2id 3 passes, 128 Mo.
+- **Fichiers** : nom daté se terminant par `.bin` (sinon pCloud ajoute lui-même « .bin »).
 - **Fréquence** : automatique au plus une fois par jour (à l'ouverture de l'app ou en tâche de fond), plus un bouton « Sauvegarder maintenant ».
-- **Rotation** : garder les 10 dernières sauvegardes datées dans le dossier, supprimer les plus anciennes.
+- **Rotation** : garder les 10 dernières sauvegardes datées dans le dossier, supprimer les plus anciennes. Une suppression refusée par pCloud est retentée à la sauvegarde suivante.
+- **Une action à la fois** dans le dossier pCloud, espacées de quelques secondes ; après chaque action, l'app relit la liste du dossier pour vérifier ce qui a vraiment été fait (pCloud signale parfois une erreur sur une action réussie).
 - **Restauration** : choisir un fichier, saisir le mot de passe, aperçu (date, nombre de notes), confirmation, remplacement des données.
 - **En cas d'échec** (dossier inaccessible, app pCloud déconnectée, permission perdue) : message clair sur l'accueil et dans Compte, avec le bouton pour rechoisir le dossier.
 - **Solution de repli** si l'écriture directe dans pCloud ne marche pas : export du fichier chiffré puis partage vers l'app pCloud.
@@ -91,6 +93,7 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 - Contexte limité (environ 4 096 jetons, soit environ 3 000 mots) : le modèle reçoit au plus 3 à 5 extraits choisis par l'app.
 - Tâches courtes et cadrées uniquement. Pas de synthèse libre de tout le carnet.
 - Embeddings calculés à l'enregistrement d'une note. Rédaction seulement quand l'utilisateur ouvre l'écran concerné ; le bilan de la semaine est généré à la première ouverture à partir du dimanche. Modèle chargé à la demande, puis libéré.
+- Au lot 4, vérifier que le modèle de rédaction et le modèle d'embeddings peuvent servir dans la même session de l'app : llama.rn 0.12.9 garde la taille des vecteurs du premier modèle chargé (défaut corrigé dans llama.rn 0.13).
 
 ## 6. Exigences non fonctionnelles
 
@@ -115,7 +118,8 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 
 ## 8. Points ouverts et risques
 
-- **pCloud comme dossier Android** : à confirmer au lot 0. Si l'app pCloud ne le permet pas, on passe au partage manuel (repli F7), ou à l'API pCloud (ce qui demanderait la permission Internet, limitée à pCloud : décision à reprendre).
+- **pCloud comme dossier Android** : **confirmé au lot 0** (écriture directe, fichiers arrivés complets dans le cloud). Restent à vérifier au lot 2 : accès après redémarrage du téléphone, suppressions espacées, relecture d'une sauvegarde déjà envoyée.
+- **Réponses de pCloud peu fiables** : pCloud peut signaler une erreur sur une écriture ou une suppression réussie, et refuse les actions trop rapprochées. Parade : une action à la fois et vérification par la liste du dossier.
 - **Tâche de fond et dossier pCloud** : l'écriture en arrière-plan peut échouer si l'app pCloud est endormie ; la sauvegarde à l'ouverture de l'app sert de filet.
 - **Mot de passe de sauvegarde perdu** = sauvegardes illisibles. Avertissement obligatoire.
 - **Perte du téléphone sans sauvegarde récente** = perte des notes depuis la dernière sauvegarde.
