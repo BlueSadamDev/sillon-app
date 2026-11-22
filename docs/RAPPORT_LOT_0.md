@@ -1,7 +1,9 @@
 # Rapport du lot 0 – Faisabilité
 
-État au 22 novembre 2026 : **chiffrement, Markdown et embeddings mesurés** ; dossier pCloud mesuré en
-grande partie (restent : redémarrage du téléphone, suppression espacée, relecture d'un fichier envoyé).
+État au 22 novembre 2026 : **lot 0 terminé.** Chiffrement, Markdown et embeddings mesurés ; dossier
+pCloud jugé suffisant par l'utilisateur pour passer à la suite. Trois vérifications pCloud n'ont pas été
+faites au lot 0 et sont reportées au lot 2 : accès après redémarrage, suppressions espacées, relecture
+d'un fichier déjà envoyé.
 Toutes les mesures viennent du Samsung Galaxy S21 (8 Go), APK de production (sans permission Internet).
 Ce rapport ne contient que des mesures et des noms de bibliothèques, jamais de vraies notes : tous les
 essais utilisent des notes fictives (`src/**/__fixtures__/`).
@@ -33,11 +35,11 @@ Fichier d'essai : 256 Kio d'octets aléatoires.
 | Nom du fichier | gardé si l'extension correspond au type : avec `application/octet-stream`, pCloud ajoute « .bin » à un nom en « .sillon » ; un nom en « .bin » reste tel quel |
 | Liste du dossier, vrais noms, tailles, dates | **oui**, par `Directory.info().files` (les adresses, elles, portent un identifiant pCloud, `f113371187787`) |
 | Fichier juste écrit | taille 0 pendant l'envoi par pCloud ; il apparaît ensuite complet |
-| Relecture du fichier juste écrit | **non** pendant l'envoi (`FileNotFoundException`) ; à refaire sur un fichier déjà envoyé |
+| Relecture du fichier juste écrit | **non** pendant l'envoi (`FileNotFoundException`) ; relecture d'un fichier déjà envoyé reportée au lot 2 |
 | Écritures rapprochées (moins de 30 s) | pCloud **crée le fichier complet mais renvoie une erreur** à l'app |
-| Suppression (rotation) | **1 sur 3** : la première réussit, les deux suivantes, lancées dans la même seconde, sont refusées (« Unable to delete ») |
-| Accès conservé après redémarrage du téléphone | à mesurer |
-| Message si la permission est retirée / app pCloud déconnectée | à mesurer |
+| Suppression (rotation) | **1 sur 3** : la première réussit, les deux suivantes, lancées dans la même seconde, sont refusées (« Unable to delete ») ; suppressions espacées reportées au lot 2 |
+| Accès conservé après redémarrage du téléphone | non mesuré au lot 0 (reporté au lot 2) |
+| Message si la permission est retirée / app pCloud déconnectée | non mesuré au lot 0 (reporté au lot 2) |
 
 Constat : **l'écriture directe dans pCloud fonctionne**, ce qui est le point le plus risqué. L'app pCloud
 supporte mal plusieurs opérations à la suite : elle exécute l'opération puis signale parfois une erreur.
