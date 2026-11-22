@@ -15,7 +15,7 @@ Référence visuelle : la direction **« A · Papier »** de la toile « Sillon 
 
 ## Principes
 - **Papier et encre** : fond crème, texte presque noir, une seule couleur d'accent (terracotta). Ambiance carnet, calme, éditoriale.
-- **L'écriture d'abord** : sur l'accueil, la capture rapide est le premier geste ; dans une note, le texte occupe l'écran, les outils restent discrets.
+- **L'écriture d'abord** : sur l'accueil, la capture rapide reste visible sans défiler, juste sous la carte d'insight ; dans une note, le texte occupe l'écran, les outils restent discrets.
 - **L'insight se distingue sans crier** : une seule carte foncée (`ink`) par écran, réservée à l'IA (« Le sillon de la semaine »).
 - **La couleur porte un sens, jamais seule** : chaque état est accompagné d'un libellé texte.
 - **Pas d'emoji, pas de dégradés, pas d'ombres portées.** Séparation par bordures fines (1 px `line`) et fonds `surface`. Icônes en trait (1,8 à 2 px), couleur du texte.
@@ -72,6 +72,7 @@ Contraste : tout texte atteint 4,5:1 sur son fond. **`accent` ne s'utilise jamai
 - **Carte d'insight** (« Le sillon de la semaine ») : fond `ink`, rayon 20, padding 20 ; libellé en majuscules `onInkMuted` ; phrase en 21/500 `onInk` ; lien « Voir les notes liées → » en `onInkAccent`. Avant le lot 4 : même carte avec « Sillon repérera ici les idées qui reviennent dans tes notes. »
 - **Carte épinglée** : fond `surface`, bordure `line`, rayon 14, titre 17/700, mention « N sous-notes » en `inkMuted`. Deux par ligne.
 - **Ligne de note (liste)** : titre 15/500, extrait 13 px `inkMuted` sur une ligne (points de suspension), date à droite en 12 px ; séparateur 1 px en bas. Toute la ligne est cliquable.
+- **Glissement d'une ligne** (récentes de l'accueil) : vers la droite, fond `error` et libellé « Corbeille » ; vers la gauche, fond `surfaceAlt` et libellé « Archiver ». L'action part au-delà d'environ un tiers de la largeur, puis un message propose « Annuler ». Les mêmes actions sont offertes aux lecteurs d'écran.
 - **Pastille d'état de la sauvegarde** : pilule 12 px, icône + libellé (« À jour », « Il y a 4 jours », « À vérifier »), couleurs `ok` / `warn` / `error`. Toucher ouvre l'écran Compte.
 - **Pastille de tag** : fond `surfaceAlt`, texte 12 px `inkSoft`, « #mot ».
 - **Bouton principal** : fond `accent`, texte blanc 14–15/700, hauteur 44–52 px, rayon 10–12.
@@ -87,9 +88,9 @@ Contraste : tout texte atteint 4,5:1 sur son fond. **`accent` ne s'utilise jamai
 2. **Création du compte** (premier lancement) : logo + « Bienvenue dans Sillon » ; champs identifiant, mot de passe, confirmation ; encadré `surface` qui explique en une phrase qu'un mot de passe oublié ne se récupère pas ; bouton principal « Créer mon compte ». Lien secondaire « Restaurer une sauvegarde » (actif au lot 2).
 3. **Activer l'empreinte** : une phrase, bouton principal « Activer », bouton secondaire « Plus tard ».
 4. **Déverrouillage** : logo, « Bonjour » suivi de l'identifiant, demande d'empreinte automatique, bouton « Utiliser mon mot de passe ».
-5. **Accueil** : date (13 px `inkMuted`) et salutation ; à droite, pastille de sauvegarde (à partir du lot 2) et bouton rond du compte (initiale) ; champ de capture ; carte d'insight ; épinglées ; récentes ; barre de navigation.
-6. **Note** : en-tête avec retour, chemin de la page (« Parent › Note », 12 px `inkMuted`) et menu « … » (épingler, déplacer, supprimer) ; titre ; tags et date de modification ; corps ; barre d'outils Markdown en mode écriture.
-7. **Pages** : arborescence dépliable, bouton « Nouvelle page », corbeille en bas de liste.
+5. **Accueil** : date (13 px `inkMuted`) et salutation ; à droite, pastille de sauvegarde (à partir du lot 2) et bouton rond du compte (initiale) ; carte d'insight ; champ de capture ; épinglées ; récentes ; barre de navigation.
+6. **Note** : en-tête avec retour, chemin de la page (« Parent › Note », 12 px `inkMuted`), bouton principal « Enregistrer » en mode écriture (enregistre et revient) et menu « … » (épingler, ajouter une sous-note, déplacer, archiver, mettre à la corbeille) ; titre ; tags et date de modification ; corps ; barre d'outils Markdown en mode écriture.
+7. **Pages** : arborescence dépliable, bouton « Nouvelle page », archives puis corbeille en bas de liste.
 8. **Recherche** : champ en haut, résultats en lignes de note avec le mot trouvé en gras.
 9. **Compte** : groupes « Sécurité » (mot de passe, empreinte, délai de verrouillage), « Sauvegarde » (dossier pCloud, dernière sauvegarde, « Sauvegarder maintenant », « Restaurer » ; actif au lot 2), « Données » (exporter en clair, effacer toutes les données).
 
@@ -122,7 +123,8 @@ Sillon parle comme un carnet attentif : sobre, une phrase complète, jamais de j
 | Note proche par le sens | note liée | similaire, embedding |
 | Copie chiffrée dans pCloud | sauvegarde | backup, export chiffré |
 | Fichier en clair | export | sauvegarde en clair |
-| Corbeille | corbeille | archive |
+| Corbeille (effacement après 30 jours) | corbeille | — |
+| Note retirée de l'accueil, gardée sans limite | archive, archiver | — |
 
 ### Relief
 - Relief = Satoshi Bold dans la couleur du texte principal. Jamais plus d'un élément en relief par phrase.

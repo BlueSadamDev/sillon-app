@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Sillon (essais)",
+    "name": "Sillon",
     "slug": "sillon",
     "version": "0.0.1",
     "orientation": "portrait",
@@ -29,7 +29,7 @@
         {
           "backgroundColor": "#F5F1E8",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 120
         }
       ],
       [
@@ -42,7 +42,10 @@
         }
       ],
       "react-native-libsodium",
-      "llama.rn"
+      "llama.rn",
+      "expo-sqlite",
+      "expo-secure-store",
+      "expo-local-authentication"
     ],
     "experiments": {
       "typedRoutes": true,

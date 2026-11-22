@@ -1,7 +1,7 @@
 # Cahier des charges – Sillon
 
 Nom de l'app : **Sillon** (application de notes personnelle avec IA locale).
-Version : 0.3 (22 novembre 2026). Changement par rapport à la 0.2 : choix techniques du lot 0 (voir `docs/RAPPORT_LOT_0.md`) : modèle d'embeddings, bibliothèques de chiffrement et de rendu Markdown, règles d'écriture dans pCloud.
+Version : 0.4 (22 novembre 2026). Changements par rapport à la 0.3 (décisions du lot 1) : archive des notes, glissement sur l'accueil (corbeille, archive), bouton « Enregistrer » dans l'éditeur, carte d'insight au-dessus de la capture rapide, règle de la capture rapide, tags écrits `#mot`, export en clair reporté au lot 2.
 
 ## 1. Contexte et objectifs
 
@@ -26,8 +26,10 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 
 ### 3.1 Note
 - Identifiant unique (UUID), titre, contenu en **Markdown**, note parente (pour imbriquer les pages), tags, épinglée oui/non.
+- **Tags** : écrits dans le texte sous la forme `#mot` ; l'app les reconnaît d'elle-même.
 - Dates de création et de modification.
 - Suppression « douce » : une note supprimée va dans une corbeille pendant 30 jours.
+- **Archive** : une note archivée (avec ses sous-notes) quitte l'accueil (récentes, épinglées) mais reste dans Pages (« Archives ») et dans la recherche. Elle n'est jamais effacée toute seule et peut être sortie des archives.
 
 ### 3.2 Données calculées
 - Embeddings de chaque note, résumé court, tags proposés, thèmes, liens entre notes, bilans de semaine. Chaque insight garde la liste des notes qui l'ont produit.
@@ -41,9 +43,9 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 ## 4. Fonctionnalités
 
 ### F1 – Écran d'accueil
-- **Capture rapide** : un champ bien visible pour écrire une note en une seconde.
-- **Insight du moment** (« Le sillon de la semaine ») : un thème qui revient, une idée liée à reprendre ou le bilan de la semaine (à partir du lot 4). Avant cela, emplacement avec un texte explicatif.
-- **Notes épinglées** et **notes récentes** (5 à 10).
+- **Insight du moment** (« Le sillon de la semaine »), en haut : un thème qui revient, une idée liée à reprendre ou le bilan de la semaine (à partir du lot 4). Avant cela, emplacement avec un texte explicatif.
+- **Capture rapide**, juste en dessous : un champ bien visible pour écrire une note en une seconde. Une seule ligne est enregistrée directement (elle devient le titre) ; plusieurs lignes ouvrent l'éditeur (la première ligne devient le titre).
+- **Notes épinglées** et **notes récentes** (5 à 10). Une note récente se glisse **vers la droite pour la corbeille** et **vers la gauche pour l'archive**, avec « Annuler » pendant quelques secondes.
 - **État de la sauvegarde** : « Sauvegardé aujourd'hui », « Dernière sauvegarde il y a N jours », « Dossier pCloud inaccessible ».
 - Navigation en bas : Accueil, Pages, Recherche, Insights.
 
@@ -51,17 +53,17 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 - **Premier lancement** : créer son compte (identifiant, mot de passe deux fois), puis proposer d'activer l'empreinte, puis proposer de configurer la sauvegarde (possible plus tard).
 - **Restaurer depuis une sauvegarde** au premier lancement (nouveau téléphone) : choisir le fichier dans le dossier pCloud, saisir le mot de passe de sauvegarde.
 - **Déverrouillage** : empreinte digitale ou mot de passe, à l'ouverture et après un délai d'inactivité réglable.
-- **Écran « Compte »** : changer le mot de passe ; régler le déverrouillage ; voir l'état de la sauvegarde et du dossier pCloud ; sauvegarder maintenant ; restaurer ; exporter toutes ses notes en clair (fichiers Markdown dans un ZIP, avec avertissement) ; effacer toutes les données (double confirmation).
+- **Écran « Compte »** : changer le mot de passe ; régler le déverrouillage ; voir l'état de la sauvegarde et du dossier pCloud ; sauvegarder maintenant ; restaurer ; exporter toutes ses notes en clair (fichiers Markdown dans un ZIP, avec avertissement ; lot 2) ; effacer toutes les données (double confirmation).
 - Mot de passe oublié : pas de réinitialisation possible sans perdre les données du téléphone ; restauration ensuite depuis la sauvegarde avec le mot de passe de sauvegarde. L'app l'explique clairement à la création du compte.
 
 ### F3 – Éditeur de notes
 - Contenu en **Markdown** écrit avec une barre d'outils au-dessus du clavier : titres, gras/italique, listes, cases à cocher, citations, liens entre notes `[[ ]]`.
 - Bascule entre mode écriture et mode lecture (rendu mis en forme).
 - Pages imbriquées (une note peut contenir des sous-notes).
-- Enregistrement automatique, sans bouton.
+- Enregistrement automatique pendant la frappe, et bouton **« Enregistrer »** en mode écriture, qui enregistre et revient à l'écran précédent.
 
 ### F4 – Organisation et recherche
-- Arborescence des pages, tags, épingles, corbeille.
+- Arborescence des pages, tags, épingles, archives, corbeille.
 - Recherche par mots (texte intégral) dès le lot 1 ; recherche par le sens à partir du lot 3.
 
 ### F5 – Insights (IA locale)
@@ -77,7 +79,7 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 
 ### F7 – Sauvegarde chiffrée vers pCloud
 - **Configuration (une fois)** : l'utilisateur choisit un dossier dans pCloud avec le sélecteur de dossiers d'Android, puis crée son **mot de passe de sauvegarde** (deux fois), avec un avertissement : sans lui, la sauvegarde est illisible ; le noter dans un gestionnaire de mots de passe.
-- **Contenu** : toutes les notes, l'arborescence, les tags, la corbeille, les réglages (hors mot de passe du compte et fichiers de modèle IA).
+- **Contenu** : toutes les notes, l'arborescence, les tags, les archives, la corbeille, les réglages (hors mot de passe du compte et fichiers de modèle IA).
 - **Chiffrement** dans l'app avant écriture : XChaCha20-Poly1305 (chiffrement authentifié), clé dérivée du mot de passe de sauvegarde par Argon2id (3 passes, 256 Mo ; environ 1,2 s sur le S21). Bibliothèque : react-native-libsodium (choisie au lot 0). Repli si la tâche de fond manque de mémoire : Argon2id 3 passes, 128 Mo.
 - **Fichiers** : nom daté se terminant par `.bin` (sinon pCloud ajoute lui-même « .bin »).
 - **Fréquence** : automatique au plus une fois par jour (à l'ouverture de l'app ou en tâche de fond), plus un bouton « Sauvegarder maintenant ».
@@ -110,8 +112,8 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
   2. choisir la bibliothèque de chiffrement et la bibliothèque de rendu Markdown ;
   3. tester un modèle d'embeddings avec llama.rn sur le S21 (vitesse, qualité en français).
   Rapport dans `docs/RAPPORT_LOT_0.md`.
-- **Lot 1 – Socle** : identité Sillon, création du compte local, déverrouillage, écran d'accueil (sans insight), éditeur Markdown, arborescence, corbeille, recherche par mots, écran Compte.
-- **Lot 2 – Sauvegarde** : sauvegarde chiffrée vers le dossier pCloud (configuration, automatique, rotation), restauration testée, état sur l'accueil.
+- **Lot 1 – Socle** : identité Sillon, création du compte local, déverrouillage, écran d'accueil (sans insight), éditeur Markdown, arborescence, archives, corbeille, recherche par mots, écran Compte.
+- **Lot 2 – Sauvegarde** : sauvegarde chiffrée vers le dossier pCloud (configuration, automatique, rotation), restauration testée, état sur l'accueil, export en clair (ZIP).
 - **Lot 3 – Recherche par le sens** : embeddings, notes liées, recherche par le sens.
 - **Lot 4 – Insights** : import du modèle, résumés et tags proposés, questions sur ses notes, bilan de la semaine, carte d'insight sur l'accueil.
 - **Plus tard** : organisation de la semaine (tâches extraites des notes), bases de données façon Notion, import de PDF, version sur ordinateur avec synchronisation.
