@@ -30,7 +30,10 @@ Fichier d'essai : 256 Kio d'octets aléatoires, nommé `sillon-essai-AAAAMMJJ-HH
 - Relecture du fichier juste après l'écriture, par l'adresse renvoyée à la création : **échec** (`FileNotFoundException`). L'adresse du fichier change une fois que pCloud l'a pris en charge.
 - Liste du dossier : 2 fichiers, nommés par des identifiants pCloud (`f113371187787`) et non par leur nom. L'un fait 262 144 octets, l'autre **0 octet** (envoi en cours ?).
 - Écritures suivantes : **refusées** par pCloud (`createFile` : « file could not be created »).
-- Corrections pour l'essai n° 2 : lecture du vrai nom par `Directory.info().files` ; relecture après une nouvelle liste du dossier ; seconde méthode d'écriture (`expo-file-system/legacy`) pour comparer ; attente d'une minute entre deux écritures.
+- **Sur pCloud (application), les 5 fichiers sont arrivés dans le cloud**, y compris les 3 écritures
+  signalées en échec : pCloud a créé le fichier tout en renvoyant une erreur à l'app. pCloud a ajouté
+  l'extension « .bin » aux noms (`sillon-essai-….sillon.bin`), à cause du type `application/octet-stream`.
+- Corrections pour l'essai n° 2 : extension « .bin » d'emblée ; lecture du vrai nom par `Directory.info().files` ; relecture après une nouvelle liste du dossier ; seconde méthode d'écriture (`expo-file-system/legacy`) pour comparer ; attente d'une minute entre deux écritures.
 
 | Vérification | Résultat |
 | --- | --- |
@@ -71,7 +74,12 @@ de 1 024 nombres, faux : leurs mesures du premier essai (1/10) sont invalides. C
 (`llama_model_n_embd_out`, sans `static`). Contournement : un seul modèle par ouverture de l'app ; le banc
 d'essai le vérifie désormais. Pour Sillon, un seul modèle d'embeddings sera utilisé : le défaut ne gêne pas.
 
-Carnet fictif : 200 notes (≈ ? Kio) et 2 000 notes (≈ ? Kio).
+Carnet fictif : 200 notes (129 Kio de texte) et 2 000 notes.
+
+Premier essai : **échec avant toute mesure**. react-native-libsodium 1.7.0 n'accepte que du texte comme
+donnée associée (« input type not yet implemented ») et ne sait pas rendre le déchiffré sous forme de
+texte (sortie `text` non implémentée). Corrections : l'en-tête est passé en base64 comme donnée associée
+(il reste authentifié octet par octet) ; le texte déchiffré est décodé par `to_string`.
 
 | Réglage Argon2id | Notes | Dérivation de la clé | Chiffrement | Déchiffrement | Taille du fichier | Identique |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -113,7 +121,7 @@ Carnet fictif : 200 notes (≈ ? Kio) et 2 000 notes (≈ ? Kio).
 | Listes à puces et numérotées | correctes |
 | Cases à cocher (cochée / non cochée) | correctes (☐ / ☑) |
 | Citation | correcte (trait vertical à gauche) |
-| Lien `[[ ]]` cliquable | à mesurer |
+| Lien `[[ ]]` cliquable | oui (ouvre le message « Lien vers la note… ») |
 | Lien ordinaire | à mesurer |
 | Bloc de code intact | à mesurer |
 | Analyse d'une note longue (29 Kio, 1 199 blocs) | 78 ms |

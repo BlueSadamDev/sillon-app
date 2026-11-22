@@ -14,9 +14,13 @@ export const BENCH_NOTE_COUNTS = [200, 2000] as const;
 /** Mot de passe de l'essai : fictif, il ne protège que des notes fictives. */
 export const BENCH_PASSWORD = 'mot-de-passe-fictif-du-banc-d-essai';
 
-/** Préfixe et extension des fichiers d'essai écrits dans le dossier pCloud. */
+/**
+ * Préfixe et extension des fichiers d'essai écrits dans le dossier pCloud.
+ * Essai n° 1 : pCloud a ajouté « .bin » aux noms en « .sillon » (type application/octet-stream),
+ * et a signalé une erreur tout en créant le fichier. Essai n° 2 : extension « .bin » d'emblée.
+ */
 export const PCLOUD_TEST_PREFIX = 'sillon-essai-';
-export const PCLOUD_TEST_EXTENSION = '.sillon';
+export const PCLOUD_TEST_EXTENSION = '.bin';
 
 /** Taille du faux fichier de sauvegarde écrit dans pCloud (octets aléatoires). */
 export const PCLOUD_TEST_SIZE_BYTES = 256 * 1024;

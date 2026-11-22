@@ -3,11 +3,14 @@
 // l'en-tête du fichier sert de donnée associée (il est donc lui aussi vérifié).
 
 import {
+  base64_variants,
   crypto_aead_xchacha20poly1305_ietf_decrypt,
   crypto_aead_xchacha20poly1305_ietf_encrypt,
   crypto_pwhash,
   crypto_pwhash_ALG_ARGON2ID13,
   randombytes_buf,
+  to_base64,
+  to_string,
 } from 'react-native-libsodium';
 
 import {
@@ -23,6 +26,14 @@ import {
 } from './format';
 
 const KEY_BYTES = 32;
+
+/**
+ * Donnée associée : react-native-libsodium n'accepte que du texte à cet endroit. L'en-tête est donc
+ * passé en base64 (transformation fixe et réversible) : il reste authentifié octet par octet.
+ */
+function headerAsAssociatedData(header: Uint8Array): string {
+  return to_base64(header, base64_variants.ORIGINAL);
+}
 
 export type Timings = { kdfMs: number; cipherMs: number };
 
@@ -42,7 +53,7 @@ export function encryptText(
   const t0 = Date.now();
   const key = deriveKey(password, salt, opsLimit, memLimit);
   const t1 = Date.now();
-  const cipher = crypto_aead_xchacha20poly1305_ietf_encrypt(plain, header, null, nonce, key);
+  const cipher = crypto_aead_xchacha20poly1305_ietf_encrypt(plain, headerAsAssociatedData(header), null, nonce, key);
   const t2 = Date.now();
   key.fill(0);
   return { file: concat(header, cipher), timings: { kdfMs: t1 - t0, cipherMs: t2 - t1 } };
@@ -60,14 +71,15 @@ export function decryptFile(file: Uint8Array, password: string): DecryptResult {
   const key = deriveKey(password, header.salt, header.opsLimit, header.memLimit);
   const t1 = Date.now();
   try {
-    const text = crypto_aead_xchacha20poly1305_ietf_decrypt(
+    // La sortie « text » de react-native-libsodium n'est pas implémentée : on décode l'UTF-8 ici.
+    const plain = crypto_aead_xchacha20poly1305_ietf_decrypt(
       null,
       file.slice(HEADER_BYTES),
-      file.slice(0, HEADER_BYTES),
+      headerAsAssociatedData(file.slice(0, HEADER_BYTES)),
       header.nonce,
       key,
-      'text',
     );
+    const text = to_string(plain);
     return { ok: true, text, timings: { kdfMs: t1 - t0, cipherMs: Date.now() - t1 } };
   } catch {
     return { ok: false, problem: 'wrong-password-or-damaged' };
