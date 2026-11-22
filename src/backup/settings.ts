@@ -10,6 +10,12 @@ export const BACKUP_KDF = { opsLimit: 3, memLimit: 256 * 1024 * 1024 } as const;
 /** Repli si le téléphone manque de mémoire : 3 passes, 128 Mo (≈ 0,6 s). */
 export const BACKUP_KDF_FALLBACK = { opsLimit: 3, memLimit: 128 * 1024 * 1024 } as const;
 
+/** Longueur minimale du mot de passe de sauvegarde (12, plus long que celui du compte). */
+export const MIN_BACKUP_PASSWORD_LENGTH = 12;
+
+/** Nom de la configuration de la sauvegarde dans le coffre sécurisé du téléphone (expo-secure-store). */
+export const BACKUP_CONFIG_KEY = 'sillon.backup';
+
 // --- Bancs d'essai du lot 0 ---
 
 /** Profils Argon2id mesurés sur le téléphone (opsLimit = nombre de passes, memLimit en octets). */

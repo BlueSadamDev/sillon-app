@@ -4,17 +4,25 @@ import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAccount } from '@/account/AccountProvider';
+import { useBackup } from '@/backup/BackupProvider';
 import { LOCK_DELAYS_MIN } from '@/account/settings';
 import { BackHeader } from '@/components/BackHeader';
 import { SectionLabel } from '@/components/notes';
-import { SecondaryButton, TextLink } from '@/components/ui';
+import { useToast } from '@/components/Toast';
+import { PrimaryButton, SecondaryButton, TextLink } from '@/components/ui';
 import { openNotes } from '@/db/expoDb';
 import { t } from '@/texts/fr';
 import { colors, font, radius, space, TOUCH, type } from '@/theme';
 
 export default function AccountScreen() {
   const account = useAccount();
+  const backup = useBackup();
+  const toast = useToast();
   const a = t.accountScreen;
+
+  async function changeFolder() {
+    if (await backup.chooseFolder()) toast({ message: a.backupFolderChanged });
+  }
 
   function confirmWipe() {
     Alert.alert(a.wipeTitle, a.wipeText, [
@@ -23,7 +31,7 @@ export default function AccountScreen() {
         text: a.wipeContinue,
         style: 'destructive',
         onPress: () =>
-          Alert.alert(a.wipeTitle2, a.wipeText2, [
+          Alert.alert(a.wipeTitle2, backup.folderName ? a.wipeText2Backup : a.wipeText2, [
             { text: a.keep, style: 'cancel' },
             { text: a.wipeConfirm, style: 'destructive', onPress: wipe },
           ]),
@@ -33,6 +41,7 @@ export default function AccountScreen() {
 
   async function wipe() {
     await (await openNotes()).wipe();
+    await backup.forget();
     await account.forget();
   }
 
@@ -89,9 +98,26 @@ export default function AccountScreen() {
 
         <View style={styles.group}>
           <SectionLabel>{a.backup}</SectionLabel>
-          <View style={[styles.card, styles.block]}>
-            <Text style={type.secondary}>{a.backupSoon}</Text>
-          </View>
+          {backup.configured ? (
+            <View style={styles.card}>
+              <View style={[styles.block]}>
+                <Text style={type.rowTitle}>{a.backupFolder(backup.folderName ?? '')}</Text>
+                <Text style={type.secondary}>{a.backupFirstSoon}</Text>
+                <SecondaryButton label={a.backupOtherFolder} onPress={changeFolder} />
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => router.push({ pathname: '/sauvegarde', params: { mode: 'password' } })}
+                style={[styles.row, styles.separator]}>
+                <Text style={type.rowTitle}>{a.backupChangePassword}</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={[styles.card, styles.block]}>
+              <Text style={type.secondary}>{a.backupNone}</Text>
+              <PrimaryButton label={a.backupSetup} onPress={() => router.push('/sauvegarde')} />
+            </View>
+          )}
         </View>
 
         <View style={styles.group}>
