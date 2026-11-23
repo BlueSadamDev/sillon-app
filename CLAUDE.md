@@ -40,6 +40,13 @@
 - Le format du fichier porte un numéro de version, pour pouvoir relire les anciennes sauvegardes.
 - Gérer proprement les cas « dossier inaccessible », « permission perdue », « app pCloud absente », avec un message clair et le bouton pour rechoisir le dossier.
 
+## Préparer le partage (sans le construire)
+- Le partage avec d'autres personnes et la collaboration sont possibles à long terme (cahier des charges, section 7, « Plus tard ») : **ne rien construire pour eux** (ni serveur, ni réseau, ni fusion automatique), mais ne pas se fermer la porte :
+  1. chaque note garde un identifiant unique, sa date de modification, un **identifiant d'auteur** (celui du compte local) et l'appareil de la dernière modification ;
+  2. **toutes** les écritures de notes (création, modification, suppression, déplacement) passent par `src/db/`, jamais directement depuis un écran ou un autre module ;
+  3. le contenu d'une note ne contient aucun réglage propre au téléphone (ces réglages vivent à part).
+- Le partage simple (lot 2.1) passe par le menu de partage d'Android : il ne demande pas la permission Internet et ne doit jamais l'ajouter.
+
 ## IA locale
 - **100 % sur le téléphone**, avec `llama.rn`. Aucun appel réseau dans le code de l'IA.
 - Modèle de rédaction : LFM2.5 1.2B Instruct (Q4_K_M), déjà validé sur le Samsung Galaxy S21 dans le projet Aube. Modèle d'embeddings : choisi au lot 0, résultat dans un rapport `docs/`.

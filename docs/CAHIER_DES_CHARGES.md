@@ -1,7 +1,8 @@
 # Cahier des charges – Sillon
 
 Nom de l'app : **Sillon** (application de notes personnelle avec IA locale).
-Version : 0.5 (22 novembre 2026). Changements par rapport à la 0.4 : feuille de route complétée par la remise en forme des notes (F8, lot 4.1) et les actions (F9, lot 5).
+Version : 0.6 (23 novembre 2026). Changements par rapport à la 0.5 : partage simple d'une note (F10, lot 2.1), préparation des données au partage et à la collaboration (3.1), feuille de route du partage à long terme (section 7, « Plus tard »).
+Version 0.5 (22 novembre 2026). Changements par rapport à la 0.4 : feuille de route complétée par la remise en forme des notes (F8, lot 4.1) et les actions (F9, lot 5).
 Version 0.4 (22 novembre 2026). Changements par rapport à la 0.3 (décisions du lot 1) : archive des notes, glissement sur l'accueil (corbeille, archive), bouton « Enregistrer » dans l'éditeur, carte d'insight au-dessus de la capture rapide, règle de la capture rapide, tags écrits `#mot`, export en clair reporté au lot 2.
 
 ## 1. Contexte et objectifs
@@ -29,6 +30,7 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 - Identifiant unique (UUID), titre, contenu en **Markdown**, note parente (pour imbriquer les pages), tags, épinglée oui/non.
 - **Tags** : écrits dans le texte sous la forme `#mot` ; l'app les reconnaît d'elle-même.
 - Dates de création et de modification.
+- **Préparation au partage** (rien à construire, voir CLAUDE.md) : chaque note garde aussi un **identifiant d'auteur** (celui du compte local) et l'appareil de la dernière modification ; toutes les modifications passent par `src/db/` ; le contenu d'une note ne contient aucun réglage propre au téléphone.
 - Suppression « douce » : une note supprimée va dans une corbeille pendant 30 jours.
 - **Archive** : une note archivée (avec ses sous-notes) quitte l'accueil (récentes, épinglées) mais reste dans Pages (« Archives ») et dans la recherche. Elle n'est jamais effacée toute seule et peut être sortie des archives.
 
@@ -108,6 +110,14 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 - **Ma semaine (5c)** : vue qui regroupe les actions datées de toutes les notes, jour par jour sur 7 jours, plus « En retard » et « Sans date ». Le bilan de la semaine (F5) peut s'y appuyer.
 - Pas de base de données façon Notion : le tableau et « Ma semaine » sont des écrans calculés à partir des notes.
 
+### F10 – Partage simple d'une note (lot 2.1)
+- Bouton **« Partager »** dans le menu « … » d'une note : ouvre le menu de partage d'Android (messagerie, mail, Drive…).
+- Trois formats au choix : **texte** (Markdown brut dans le message), **fichier Markdown** (`.md`), **PDF** (mise en forme du mode lecture, police Satoshi, sans les éléments d'interface).
+- Option « inclure les sous-notes » pour une page (un seul fichier, sous-notes à la suite, ou un ZIP de fichiers `.md`).
+- Le partage envoie une **copie** : les modifications suivantes ne sont pas transmises.
+- **Aucune permission Internet** : le partage passe par les autres apps du téléphone. Les liens `[[ ]]` vers des notes non partagées deviennent du texte simple ; les insights et notes liées ne sont jamais inclus.
+- Bibliothèques pressenties (à valider au début du lot) : `expo-sharing` et `expo-print` (PDF généré sur le téléphone).
+
 ## 5. Règles de l'IA
 
 - 100 % local : le modèle tourne sur le téléphone, importé à la main (fichier vérifié par taille et empreinte SHA-256), jamais téléchargé par l'app.
@@ -140,7 +150,19 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
   - 5a : actions explicites et tableau d'actions par page, sans IA ;
   - 5b : actions implicites proposées par l'IA, validées une par une ;
   - 5c : vue « Ma semaine ».
+- **Lot 2.1 – Partage simple** (F10) : partage d'une note ou d'une page en texte, Markdown ou PDF par le menu de partage d'Android.
 - **Plus tard** : bases de données façon Notion, import de PDF, version sur ordinateur avec synchronisation.
+- **Plus tard – partage et collaboration**, par niveaux (chaque niveau demande son propre cahier des charges et une phase de faisabilité) :
+  - **Partage à jour en lecture, par dossier pCloud partagé** (sans serveur) : Sillon dépose la note chiffrée dans un dossier pCloud partagé, la Sillon de l'invité la lit. Demande : Sillon et pCloud chez l'invité, une clé par note partagée transmise à l'invité, une mise à jour non instantanée.
+  - **Collaboration (plusieurs personnes modifient la même note)** : change les règles de base de Sillon. Conditions :
+    - un **serveur relais** (le mini PC suffit pour quelques personnes), joint par Tailscale de préférence (invités ajoutés au réseau, rien d'ouvert sur Internet) ;
+    - la **permission Internet**, limitée à un seul module de synchronisation ;
+    - de **vrais comptes** : une identité et une paire de clés par personne ;
+    - **chiffrement de bout en bout** : une clé par note partagée, remise aux seuls invités ; le serveur ne voit jamais le contenu ;
+    - **fusion automatique des modifications** (structure de type CRDT : Yjs ou Automerge) à la place des copies de conflit ; c'est le changement le plus lourd, il touche au stockage des notes ;
+    - **droits** (lecture, écriture, retrait d'un invité) et historique des modifications par auteur ;
+    - **règle IA** : les notes des autres n'entrent pas dans les insights sans leur accord ;
+    - **données personnelles** : héberger les notes d'autres personnes fait de l'utilisateur le responsable de ces données ; à cadrer avant d'ouvrir le partage.
 
 ## 8. Points ouverts et risques
 
@@ -153,4 +175,6 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 - **Remise en forme (F8)** : un modèle de 1,2 milliard de paramètres peut retirer ou modifier du contenu. Le gardien et la comparaison avant / après sont obligatoires ; mesurer au lot 4.1 sur notes fictives le taux de propositions refusées par le gardien.
 - **Actions implicites (F9, 5b)** : risque d'actions inventées ou en double. Parades : phrase d'origine obligatoire, validation une par une, filtre des doublons. Pour une page avec beaucoup de sous-notes, le traitement note par note est plus lent : à mesurer.
 - **Dates écrites en français** (F9, 5a) : « vendredi » ou « fin du mois » demandent des règles claires (vendredi = le prochain à venir). Les règles retenues seront écrites dans le cahier au lot 5a.
+- **Partage simple (F10)** : un PDF ou un fichier partagé sort du contrôle de Sillon (copie en clair chez le destinataire et dans l'app utilisée). Le menu de partage le rappelle en une phrase.
+- **Collaboration (long terme)** : passer d'une note en Markdown simple à une structure de fusion automatique demandera une migration des notes existantes. La préparation de la section 3.1 la rend plus simple, pas gratuite.
 - **Changement de téléphone** (par exemple un Pixel 8 Pro) : refaire les mesures de l'IA.
