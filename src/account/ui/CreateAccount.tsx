@@ -2,7 +2,9 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { RestoreFlow } from '@/backup/ui/RestoreFlow';
 import { Logo } from '@/components/Logo';
+import { useToast } from '@/components/Toast';
 import { Field, FormScreen, InfoBox, PrimaryButton, ProblemText, TextLink } from '@/components/ui';
 import { t } from '@/texts/fr';
 import { type } from '@/theme';
@@ -23,6 +25,10 @@ export function CreateAccount() {
   const [confirm, setConfirm] = useState('');
   const [problem, setProblem] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Restauration d'une sauvegarde avant la création du compte (nouveau téléphone, F7).
+  const [restoring, setRestoring] = useState(false);
+  const [restoredDelay, setRestoredDelay] = useState<number | undefined>(undefined);
+  const toast = useToast();
 
   async function submit() {
     const p = checkNewAccount(username, password, confirm);
@@ -32,7 +38,24 @@ export function CreateAccount() {
     }
     setProblem(null);
     setBusy(true);
-    await createAccount(username, password);
+    await createAccount(username, password, restoredDelay);
+  }
+
+  if (restoring) {
+    return (
+      <FormScreen>
+        <RestoreFlow
+          mode="start"
+          onDone={(content) => {
+            setUsername(content.username);
+            setRestoredDelay(content.settings.lockDelayMin);
+            setRestoring(false);
+            toast({ message: t.restore.doneAtStart });
+          }}
+        />
+        <TextLink label={t.restore.backToAccount} onPress={() => setRestoring(false)} />
+      </FormScreen>
+    );
   }
 
   return (
@@ -70,7 +93,7 @@ export function CreateAccount() {
       <InfoBox>{t.account.forgotWarning}</InfoBox>
       {problem && <ProblemText>{problem}</ProblemText>}
       <PrimaryButton label={busy ? t.account.creating : t.account.create} onPress={submit} disabled={busy} />
-      <TextLink label={t.account.restore} onPress={() => setProblem(t.account.restoreLater)} />
+      {restoredDelay === undefined && <TextLink label={t.account.restore} onPress={() => setRestoring(true)} />}
     </FormScreen>
   );
 }

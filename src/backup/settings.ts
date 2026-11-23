@@ -58,6 +58,12 @@ export const BACKGROUND_TASK_NAME = 'sillon-sauvegarde-quotidienne';
  */
 export const BACKGROUND_INTERVAL_MIN = 6 * 60;
 
+/**
+ * Taille maximale d'un fichier à restaurer (octets). Une sauvegarde de 2 000 notes fait environ 1,3 Mo
+ * (lot 0) : au-delà de 100 Mo, ce n'est pas une sauvegarde Sillon, et le lire saturerait la mémoire.
+ */
+export const MAX_RESTORE_BYTES = 100 * 1024 * 1024;
+
 /** Au-delà de ce nombre de jours sans sauvegarde, la pastille passe en « warn » (DESIGN.md). */
 export const BACKUP_OLD_AFTER_DAYS = 3;
 

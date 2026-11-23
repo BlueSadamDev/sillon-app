@@ -17,6 +17,7 @@ import {
 } from './cipher';
 import { HEADER_BYTES } from './format';
 import { buildPayload, parsePayload, summarize } from './payload';
+import { openBackup } from './restore';
 import { nobleEngine } from './testing/nobleEngine';
 
 // Réglages Argon2id allégés pour que les tests restent rapides (l'app utilise 3 passes, 256 Mo).
@@ -111,6 +112,39 @@ describe('sauvegarde puis restauration', () => {
     badHeader[8] ^= 1; // nombre de passes modifié
     expect(decryptWithPassword(badHeader, PASSWORD, nobleEngine).ok).toBe(false);
     expect(decryptWithPassword(new Uint8Array(200), PASSWORD, nobleEngine)).toEqual({ ok: false, problem: 'not-sillon' });
+  });
+});
+
+describe('ouverture d’un fichier pour la restauration', () => {
+  it('donne l’aperçu, puis la restauration remplace les notes', async () => {
+    const { repo } = await fakeNotebook();
+    const { file } = await backup(repo);
+    const opened = openBackup(file, PASSWORD, nobleEngine);
+    expect(opened.ok && opened.summary).toEqual({ createdAt: 1_700_000_500_000, notes: 4, archived: 2, trashed: 1 });
+    if (!opened.ok) return;
+    const target = await freshRepo();
+    await target.replaceAll(opened.content.notes);
+    expect(await target.exportAll()).toEqual(await repo.exportAll());
+  });
+
+  it('dit pourquoi un fichier ne s’ouvre pas', async () => {
+    const { repo } = await fakeNotebook();
+    const { file } = await backup(repo);
+    expect(openBackup(file, 'autre-mot-de-passe', nobleEngine)).toEqual({ ok: false, problem: 'wrong-password' });
+    expect(openBackup(new Uint8Array(200), PASSWORD, nobleEngine)).toEqual({ ok: false, problem: 'not-sillon' });
+    expect(openBackup(new Uint8Array(3), PASSWORD, nobleEngine)).toEqual({ ok: false, problem: 'not-sillon' });
+    const future = file.slice();
+    future[4] = 9; // version du format inconnue
+    expect(openBackup(future, PASSWORD, nobleEngine)).toEqual({ ok: false, problem: 'unknown-version' });
+    const key = createBackupKey(PASSWORD, TEST_KDF, nobleEngine);
+    expect(openBackup(encryptWithKey('{"format":"autre"}', key, nobleEngine), PASSWORD, nobleEngine)).toEqual({
+      ok: false,
+      problem: 'not-sillon',
+    });
+    expect(openBackup(encryptWithKey('{"format":"sillon-backup","version":1}', key, nobleEngine), PASSWORD, nobleEngine)).toEqual({
+      ok: false,
+      problem: 'invalid',
+    });
   });
 });
 

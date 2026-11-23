@@ -146,11 +146,19 @@ export default function AccountScreen() {
                 style={[styles.row, styles.separator]}>
                 <Text style={type.rowTitle}>{a.backupChangePassword}</Text>
               </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => router.push('/restaurer')}
+                disabled={backup.running}
+                style={[styles.row, styles.separator]}>
+                <Text style={type.rowTitle}>{t.restore.title}</Text>
+              </Pressable>
             </View>
           ) : (
             <View style={[styles.card, styles.block]}>
               <Text style={type.secondary}>{a.backupNone}</Text>
               <PrimaryButton label={a.backupSetup} onPress={() => router.push('/sauvegarde')} />
+              <SecondaryButton label={t.restore.title} onPress={() => router.push('/restaurer')} />
             </View>
           )}
         </View>

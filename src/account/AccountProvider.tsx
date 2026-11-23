@@ -22,7 +22,8 @@ type AccountState = {
   offerBiometrics: boolean;
   /** Juste après la création du compte (et l'empreinte) : proposer de configurer la sauvegarde. */
   offerBackup: boolean;
-  createAccount(username: string, password: string): Promise<void>;
+  /** lockDelayMin : délai repris d'une sauvegarde restaurée avant la création du compte. */
+  createAccount(username: string, password: string, lockDelayMin?: number): Promise<void>;
   unlockWithPassword(password: string): Promise<boolean>;
   unlockWithBiometrics(): Promise<boolean>;
   /** Active l'empreinte (après l'avoir vérifiée) ou la désactive. */
@@ -91,10 +92,10 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       offerBiometrics,
       offerBackup,
 
-      async createAccount(username, password) {
+      async createAccount(username, password, lockDelayMin = DEFAULT_LOCK_DELAY_MIN) {
         await afterPaint();
         const record = hashPassword(password, argon2id, newSalt());
-        await save({ username: username.trim(), password: record, biometrics: false, lockDelayMin: DEFAULT_LOCK_DELAY_MIN });
+        await save({ username: username.trim(), password: record, biometrics: false, lockDelayMin });
         setOfferBiometrics(canUseBiometrics);
         setOfferBackup(true);
         setStatus('unlocked');

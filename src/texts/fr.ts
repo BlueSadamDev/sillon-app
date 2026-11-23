@@ -187,6 +187,50 @@ export const t = {
     offerSetup: 'Configurer',
     offerLater: 'Plus tard',
   },
+  restore: {
+    title: 'Restaurer une sauvegarde',
+    intro: 'Choisis un fichier de sauvegarde, puis tape le mot de passe de sauvegarde qui le protège.',
+    pickHint:
+      'Dans le sélecteur, ouvre pCloud puis ton dossier de sauvegarde. Les fichiers s’appellent «\u00a0sillon-\u00a0», suivi de la date et de l’heure.',
+    pick: 'Choisir un fichier',
+    otherFile: 'Choisir un autre fichier',
+    file: (name: string) => `Fichier choisi\u00a0: ${name}`,
+    password: 'Mot de passe de sauvegarde',
+    open: 'Ouvrir la sauvegarde',
+    opening: 'Ouverture…',
+    previewTitle: (date: string) => `Sauvegarde du ${date}`,
+    previewCounts: (notes: number, archived: number, trashed: number) => {
+      const plural = (n: number, one: string, many: string) => `${n}\u00a0${n > 1 ? many : one}`;
+      const base = notes === 0 ? 'Aucune note' : plural(notes, 'note', 'notes');
+      const inArchive = archived > 0 ? `, dont ${plural(archived, 'archive', 'archives')}` : '';
+      const inTrash = trashed > 0 ? `, plus ${trashed}\u00a0dans la corbeille` : '';
+      return `${base}${inArchive}${inTrash}.`;
+    },
+    replaceWarning: (current: number) =>
+      current === 0
+        ? 'Les notes de la sauvegarde prendront place dans Sillon.'
+        : `${current > 1 ? `Les ${current}\u00a0notes` : 'La note'} de ce téléphone ${current > 1 ? 'seront remplacées' : 'sera remplacée'} par celles de la sauvegarde. Cela ne s’annule pas.`,
+    replace: 'Remplacer mes notes',
+    restoreHere: 'Restaurer ces notes',
+    confirmTitle: 'Remplacer tes notes\u00a0?',
+    confirmText: 'Les notes de ce téléphone, archives et corbeille comprises, seront remplacées par celles de la sauvegarde.',
+    confirm: 'Remplacer',
+    keep: 'Garder mes notes',
+    restoring: 'Restauration…',
+    done: 'Notes restaurées.',
+    doneAtStart: 'Notes restaurées. Crée maintenant ton compte sur ce téléphone.',
+    backToAccount: 'Revenir à la création du compte',
+    problems: {
+      unreadable: 'Sillon n’a pas pu lire ce fichier. Vérifie que l’app pCloud est connectée, puis réessaie.',
+      'too-big': 'Ce fichier est bien trop gros pour être une sauvegarde Sillon.',
+      'not-sillon': 'Ce fichier n’est pas une sauvegarde Sillon. Choisis un fichier qui commence par «\u00a0sillon-\u00a0».',
+      'unknown-version': 'Cette sauvegarde vient d’une version plus récente de Sillon. Mets l’app à jour, puis réessaie.',
+      'wrong-password': 'Le mot de passe ne correspond pas, ou le fichier est abîmé. Vérifie le mot de passe de sauvegarde.',
+      invalid: 'Cette sauvegarde est abîmée et Sillon ne peut pas la restaurer. Essaie une sauvegarde plus ancienne.',
+      empty: 'Tape le mot de passe de sauvegarde.',
+      failed: 'La restauration n’a pas abouti. Tes notes n’ont pas changé.',
+    },
+  },
   passwordScreen: {
     title: 'Changer le mot de passe',
     current: 'Mot de passe actuel',
@@ -208,7 +252,6 @@ export const t = {
     create: 'Créer mon compte',
     creating: 'Création du compte…',
     restore: 'Restaurer une sauvegarde',
-    restoreLater: 'La restauration d’une sauvegarde arrivera dans une prochaine version.',
     problems: {
       'username-empty': 'Choisis un identifiant.',
       'username-long': 'Choisis un identifiant plus court.',
