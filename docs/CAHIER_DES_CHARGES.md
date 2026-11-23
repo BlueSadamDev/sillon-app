@@ -1,7 +1,7 @@
 # Cahier des charges – Sillon
 
 Nom de l'app : **Sillon** (application de notes personnelle avec IA locale).
-Version : 0.6 (23 novembre 2026). Changements par rapport à la 0.5 : partage simple d'une note (F10, lot 2.1), préparation des données au partage et à la collaboration (3.1), feuille de route du partage à long terme (section 7, « Plus tard »).
+Version : 0.6 (23 novembre 2026). Changements par rapport à la 0.5 : retours du premier usage (lot 1.1 : cases à cocher dans les deux modes, copie du texte, bouton « + », brouillon de la capture, boutons « Lire » et « Enregistrer » intervertis), dictée vocale locale (F11, lot 6), partage simple d'une note (F10, lot 2.1), préparation des données au partage et à la collaboration (3.1), feuille de route du partage à long terme (section 7, « Plus tard »).
 Version 0.5 (22 novembre 2026). Changements par rapport à la 0.4 : feuille de route complétée par la remise en forme des notes (F8, lot 4.1) et les actions (F9, lot 5).
 Version 0.4 (22 novembre 2026). Changements par rapport à la 0.3 (décisions du lot 1) : archive des notes, glissement sur l'accueil (corbeille, archive), bouton « Enregistrer » dans l'éditeur, carte d'insight au-dessus de la capture rapide, règle de la capture rapide, tags écrits `#mot`, export en clair reporté au lot 2.
 
@@ -48,6 +48,8 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 ### F1 – Écran d'accueil
 - **Insight du moment** (« Le sillon de la semaine »), en haut : un thème qui revient, une idée liée à reprendre ou le bilan de la semaine (à partir du lot 4). Avant cela, emplacement avec un texte explicatif.
 - **Capture rapide**, juste en dessous : un champ bien visible pour écrire une note en une seconde. Une seule ligne est enregistrée directement (elle devient le titre) ; plusieurs lignes ouvrent l'éditeur (la première ligne devient le titre).
+  - **Champ vide** (lot 1.1) : le bouton « + » ouvre directement une nouvelle note vide dans l'éditeur.
+  - **Brouillon gardé** (lot 1.1) : le texte saisi et non encore validé est conservé si l'on quitte l'accueil, ferme l'app ou si le téléphone la coupe ; il réapparaît au retour. Il est stocké dans la base locale de l'app (même protection que les notes), effacé dès que la note est créée, et n'entre pas dans la sauvegarde.
 - **Notes épinglées** et **notes récentes** (5 à 10). Une note récente se glisse **vers la droite pour la corbeille** et **vers la gauche pour l'archive**, avec « Annuler » pendant quelques secondes.
 - **État de la sauvegarde** : « Sauvegardé aujourd'hui », « Dernière sauvegarde il y a N jours », « Dossier pCloud inaccessible ».
 - Navigation en bas : Accueil, Pages, Recherche, Insights.
@@ -64,6 +66,14 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 - Bascule entre mode écriture et mode lecture (rendu mis en forme).
 - Pages imbriquées (une note peut contenir des sous-notes).
 - Enregistrement automatique pendant la frappe, et bouton **« Enregistrer »** en mode écriture, qui enregistre et revient à l'écran précédent.
+- **Boutons intervertis** (lot 1.1) : « Enregistrer » passe dans la barre d'outils, à droite, au-dessus du clavier (à portée de pouce) ; la bascule « Lire » / « Écrire » passe dans l'en-tête.
+- **Cases à cocher utilisables dans les deux modes** (lot 1.1) :
+  - en mode lecture, toucher une case la coche ou la décoche (la ligne `- [ ]` devient `- [x]` dans le texte, enregistrement immédiat) ;
+  - en mode écriture, le bouton « Case à cocher » de la barre d'outils coche ou décoche la case de la ligne où se trouve le curseur (et crée la case si la ligne n'en a pas).
+- **Copier du texte** (lot 1.1) :
+  - mode écriture : la sélection et le menu « Copier » d'Android doivent fonctionner normalement ;
+  - mode lecture : texte sélectionnable paragraphe par paragraphe ;
+  - menu « … » : **« Copier tout le texte »** (Markdown de la note dans le presse-papiers).
 
 ### F4 – Organisation et recherche
 - Arborescence des pages, tags, épingles, archives, corbeille.
@@ -118,6 +128,14 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 - **Aucune permission Internet** : le partage passe par les autres apps du téléphone. Les liens `[[ ]]` vers des notes non partagées deviennent du texte simple ; les insights et notes liées ne sont jamais inclus.
 - Bibliothèques pressenties (à valider au début du lot) : `expo-sharing` et `expo-print` (PDF généré sur le téléphone).
 
+### F11 – Dictée vocale locale (lot 6)
+- Bouton **micro** dans la capture rapide et dans la barre d'outils de l'éditeur : l'utilisateur parle, le texte s'écrit à l'endroit du curseur, il peut le corriger ensuite.
+- **100 % sur le téléphone** : transcription par un modèle Whisper local (bibliothèque `whisper.rn`, de la même équipe que `llama.rn`), importé à la main comme le modèle de rédaction. Aucun audio ne sort du téléphone et l'APK reste sans permission Internet.
+- Nouvelle permission : **micro** (`RECORD_AUDIO`), demandée au premier usage, avec une phrase qui explique pourquoi.
+- L'audio n'est jamais conservé : il est effacé dès que le texte est produit.
+- Ponctuation et majuscules ajoutées par le modèle ; les commandes vocales (« à la ligne », « case à cocher ») sont hors périmètre au départ.
+- En attendant ce lot : la dictée du clavier Gboard (touche micro) fonctionne déjà dans tous les champs de Sillon. Elle passe par Google, sauf si la reconnaissance hors connexion du français est installée sur le téléphone.
+
 ## 5. Règles de l'IA
 
 - 100 % local : le modèle tourne sur le téléphone, importé à la main (fichier vérifié par taille et empreinte SHA-256), jamais téléchargé par l'app.
@@ -143,6 +161,8 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
   Rapport dans `docs/RAPPORT_LOT_0.md`.
 - **Lot 1 – Socle** : identité Sillon, création du compte local, déverrouillage, écran d'accueil (sans insight), éditeur Markdown, arborescence, archives, corbeille, recherche par mots, écran Compte.
 - **Lot 2 – Sauvegarde** : sauvegarde chiffrée vers le dossier pCloud (configuration, automatique, rotation), restauration testée, état sur l'accueil, export en clair (ZIP).
+- **Lot 1.1 – Confort d'écriture** (retours du premier usage, à faire juste après la fusion du lot 2 pour éviter les conflits) : cases à cocher dans les deux modes, copie du texte, « + » qui ouvre une note vide, brouillon de la capture gardé, boutons « Lire » et « Enregistrer » intervertis.
+- **Lot 2.1 – Partage simple** (F10) : partage d'une note ou d'une page en texte, Markdown ou PDF par le menu de partage d'Android.
 - **Lot 3 – Recherche par le sens** : embeddings, notes liées, recherche par le sens.
 - **Lot 4 – Insights** : import du modèle, résumés et tags proposés, questions sur ses notes, bilan de la semaine, carte d'insight sur l'accueil.
 - **Lot 4.1 – Remise en forme** (F8) : « Corriger les fautes », puis « Mettre en forme », avec comparaison avant / après, annulation et gardien.
@@ -150,7 +170,7 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
   - 5a : actions explicites et tableau d'actions par page, sans IA ;
   - 5b : actions implicites proposées par l'IA, validées une par une ;
   - 5c : vue « Ma semaine ».
-- **Lot 2.1 – Partage simple** (F10) : partage d'une note ou d'une page en texte, Markdown ou PDF par le menu de partage d'Android.
+- **Lot 6 – Dictée vocale locale** (F11) : d'abord un banc d'essai (taille et vitesse des modèles Whisper sur le S21, qualité en français, cohabitation avec le modèle de rédaction en mémoire), puis le bouton micro dans la capture et l'éditeur.
 - **Plus tard** : bases de données façon Notion, import de PDF, version sur ordinateur avec synchronisation.
 - **Plus tard – partage et collaboration**, par niveaux (chaque niveau demande son propre cahier des charges et une phase de faisabilité) :
   - **Partage à jour en lecture, par dossier pCloud partagé** (sans serveur) : Sillon dépose la note chiffrée dans un dossier pCloud partagé, la Sillon de l'invité la lit. Demande : Sillon et pCloud chez l'invité, une clé par note partagée transmise à l'invité, une mise à jour non instantanée.
@@ -177,4 +197,6 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 - **Dates écrites en français** (F9, 5a) : « vendredi » ou « fin du mois » demandent des règles claires (vendredi = le prochain à venir). Les règles retenues seront écrites dans le cahier au lot 5a.
 - **Partage simple (F10)** : un PDF ou un fichier partagé sort du contrôle de Sillon (copie en clair chez le destinataire et dans l'app utilisée). Le menu de partage le rappelle en une phrase.
 - **Collaboration (long terme)** : passer d'une note en Markdown simple à une structure de fusion automatique demandera une migration des notes existantes. La préparation de la section 3.1 la rend plus simple, pas gratuite.
+- **Copie en mode lecture (lot 1.1)** : l'affichage Markdown ne permet de sélectionner qu'un paragraphe à la fois. « Copier tout le texte » compense ; une sélection sur plusieurs paragraphes demanderait de changer de bibliothèque de rendu.
+- **Dictée locale (F11)** : un modèle Whisper assez bon en français pèse plusieurs centaines de Mo et peut être lent sur le S21 ; à mesurer au banc d'essai du lot 6. Repli : petit modèle plus rapide, ou dictée Gboard hors connexion.
 - **Changement de téléphone** (par exemple un Pixel 8 Pro) : refaire les mesures de l'IA.

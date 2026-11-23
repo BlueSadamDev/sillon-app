@@ -68,7 +68,7 @@ Contraste : tout texte atteint 4,5:1 sur son fond. **`accent` ne s'utilise jamai
 - **Cibles tactiles ≥ 44 px** (boutons, onglets, cases, liens de liste).
 
 ## Composants
-- **Champ de capture rapide** : fond `surface`, bordure `line`, rayon 16, texte 16 px, invitation « Une idée, une pensée… » ; à droite, bouton carré 44 px fond `accent`, icône « + » blanche. Valider crée la note et ouvre l'éditeur, ou l'enregistre directement si le texte tient sur une ligne (à trancher au lot 1).
+- **Champ de capture rapide** : fond `surface`, bordure `line`, rayon 16, texte 16 px, invitation « Une idée, une pensée… » ; à droite, bouton carré 44 px fond `accent`, icône « + » blanche. Une ligne : la note est enregistrée directement ; plusieurs lignes : l'éditeur s'ouvre ; champ vide : « + » ouvre une note vide (lot 1.1). Le texte non validé est gardé comme brouillon (lot 1.1). Bouton micro à gauche du « + » au lot 6.
 - **Carte d'insight** (« Le sillon de la semaine ») : fond `ink`, rayon 20, padding 20 ; libellé en majuscules `onInkMuted` ; phrase en 21/500 `onInk` ; lien « Voir les notes liées → » en `onInkAccent`. Avant le lot 4 : même carte avec « Sillon repérera ici les idées qui reviennent dans tes notes. »
 - **Carte épinglée** : fond `surface`, bordure `line`, rayon 14, titre 17/700, mention « N sous-notes » en `inkMuted`. Deux par ligne.
 - **Ligne de note (liste)** : titre 15/500, extrait 13 px `inkMuted` sur une ligne (points de suspension), date à droite en 12 px ; séparateur 1 px en bas. Toute la ligne est cliquable.
@@ -77,10 +77,10 @@ Contraste : tout texte atteint 4,5:1 sur son fond. **`accent` ne s'utilise jamai
 - **Pastille de tag** : fond `surfaceAlt`, texte 12 px `inkSoft`, « #mot ».
 - **Bouton principal** : fond `accent`, texte blanc 14–15/700, hauteur 44–52 px, rayon 10–12.
 - **Bouton secondaire** : contour `line`, fond `surface`, texte `ink`.
-- **Barre d'outils Markdown** (au-dessus du clavier) : fond `surface`, bordure haute `line` ; boutons 44 × 44 transparents : Titre (H), Gras (B), Italique (I), Liste, Case à cocher, Lien vers une note `[[ ]]` ; à droite, bouton principal « Lire » / « Écrire » pour basculer de mode.
+- **Barre d'outils Markdown** (au-dessus du clavier) : fond `surface`, bordure haute `line` ; boutons 44 × 44 transparents : Titre (H), Gras (B), Italique (I), Liste, Case à cocher, Lien vers une note `[[ ]]` (micro au lot 6) ; à droite, bouton principal « Enregistrer » (enregistre et revient), depuis le lot 1.1. Le bouton « Case à cocher » coche ou décoche la case de la ligne du curseur.
 - **Bloc « Notes liées »** (bas d'une note, lot 3) : carte `surface`, libellé avec l'icône de pousse, puces cliquables (fond `bg`, bordure `line`, rayon 10, 13 px).
 - **Citation** : trait vertical 2 px `#D9CFBB` à gauche (bordure intérieure, pas une carte), texte `inkSoft` en italique.
-- **Case à cocher** : 18 px, couleur `accent` ; tâche faite barrée et en `inkMuted`.
+- **Case à cocher** : 18 px, couleur `accent` ; tâche faite barrée et en `inkMuted`. En mode lecture, la zone tactile de la case fait au moins 44 × 44 px (lot 1.1).
 - **Barre de navigation** : 4 onglets égaux (Accueil, Pages, Recherche, Insights), icône 22 px + libellé 11 px, actif en `ink` 700, inactifs en `inkMuted`, fond `surface`, bordure haute `line`.
 
 ## Écrans du lot 1
@@ -89,7 +89,7 @@ Contraste : tout texte atteint 4,5:1 sur son fond. **`accent` ne s'utilise jamai
 3. **Activer l'empreinte** : une phrase, bouton principal « Activer », bouton secondaire « Plus tard ».
 4. **Déverrouillage** : logo, « Bonjour » suivi de l'identifiant, demande d'empreinte automatique, bouton « Utiliser mon mot de passe ».
 5. **Accueil** : date (13 px `inkMuted`) et salutation ; à droite, pastille de sauvegarde (à partir du lot 2) et bouton rond du compte (initiale) ; carte d'insight ; champ de capture ; épinglées ; récentes ; barre de navigation.
-6. **Note** : en-tête avec retour, chemin de la page (« Parent › Note », 12 px `inkMuted`), bouton principal « Enregistrer » en mode écriture (enregistre et revient) et menu « … » (épingler, ajouter une sous-note, déplacer, archiver, mettre à la corbeille) ; titre ; tags et date de modification ; corps ; barre d'outils Markdown en mode écriture.
+6. **Note** : en-tête avec retour, chemin de la page (« Parent › Note », 12 px `inkMuted`), bascule « Lire » / « Écrire » (bouton secondaire, depuis le lot 1.1 ; « Enregistrer » est passé dans la barre d'outils) et menu « … » (avec « Copier tout le texte » au lot 1.1) (épingler, ajouter une sous-note, déplacer, archiver, mettre à la corbeille) ; titre ; tags et date de modification ; corps ; barre d'outils Markdown en mode écriture.
 7. **Pages** : arborescence dépliable, bouton « Nouvelle page », archives puis corbeille en bas de liste.
 8. **Recherche** : champ en haut, résultats en lignes de note avec le mot trouvé en gras.
 9. **Compte** : groupes « Sécurité » (mot de passe, empreinte, délai de verrouillage), « Sauvegarde » (dossier pCloud, dernière sauvegarde, « Sauvegarder maintenant », « Restaurer » ; actif au lot 2), « Données » (exporter en clair, effacer toutes les données).

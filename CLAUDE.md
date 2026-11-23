@@ -65,6 +65,7 @@
 - **Lot 2** : sauvegarde chiffrée vers le dossier pCloud, restauration testée.
 - **Lot 3** : recherche par le sens et notes liées.
 - **Lot 4** : insights (résumés, tags proposés, questions, bilan de la semaine).
+- **Suite** (cahier des charges, section 7) : lot 1.1 (confort d'écriture, juste après la fusion du lot 2), lot 2.1 (partage simple), lot 4.1 (remise en forme), lot 5 (actions), lot 6 (dictée vocale locale, avec un banc d'essai d'abord).
 
 ## Design
 Lire [DESIGN.md](DESIGN.md) avant toute modification d'interface et le respecter. Tant que DESIGN.md n'existe pas (lot 0), garder une interface minimale et lisible, sans travail graphique.
@@ -81,7 +82,7 @@ Tout texte affiché passe par `src/texts/` et respecte la charte des textes de D
 
 ## Dépendances
 - Pour ajouter un module Expo : `npx expo install <nom>`, jamais `npm install`.
-- Modules prévus (à ajouter seulement quand le lot en a besoin, avec validation) : `expo-sqlite`, `expo-secure-store`, `expo-local-authentication`, `expo-dev-client`, `expo-build-properties`, `expo-file-system` (accès au dossier pCloud), `expo-document-picker` (import du modèle, restauration), `expo-background-task` + `expo-task-manager` (sauvegarde quotidienne), `jest-expo`, une bibliothèque de rendu Markdown et une de chiffrement (choisies au lot 0), `llama.rn` (lot 3).
+- Modules prévus (à ajouter seulement quand le lot en a besoin, avec validation) : `expo-sqlite`, `expo-secure-store`, `expo-local-authentication`, `expo-dev-client`, `expo-build-properties`, `expo-file-system` (accès au dossier pCloud), `expo-document-picker` (import du modèle, restauration), `expo-background-task` + `expo-task-manager` (sauvegarde quotidienne), `jest-expo`, une bibliothèque de rendu Markdown et une de chiffrement (choisies au lot 0), `llama.rn` (lot 3), `expo-clipboard` (lot 1.1), `expo-sharing` et `expo-print` (lot 2.1), `whisper.rn` (lot 6, avec la permission micro).
 - Ne jamais ajouter manuellement `expo-modules-core` ni `expo-modules-autolinking` dans `package.json`. Lancer `npx expo install --fix` si nécessaire.
 - **Dependabot** : ne jamais fusionner une PR Dependabot qui touche les dépendances npm. À la place : `npx expo install --check`, puis `npx expo install --fix` sur une branche dédiée, et fermer la PR avec une explication. Les PR sur les actions GitHub peuvent être fusionnées après un build réussi.
 
