@@ -48,6 +48,16 @@ export const AUTO_START_DELAY_MS = 2000;
 /** Après une sauvegarde automatique ratée, délai avant une nouvelle tentative automatique (minutes). */
 export const AUTO_RETRY_AFTER_MIN = 60;
 
+/** Nom de la tâche de fond de sauvegarde auprès d'Android. */
+export const BACKGROUND_TASK_NAME = 'sillon-sauvegarde-quotidienne';
+
+/**
+ * Intervalle minimal entre deux réveils de la tâche de fond (minutes). Android choisit le moment exact ;
+ * la tâche ne sauvegarde qu'une fois par jour. Plusieurs réveils par jour donnent plusieurs chances
+ * si l'un échoue (app pCloud endormie, par exemple).
+ */
+export const BACKGROUND_INTERVAL_MIN = 6 * 60;
+
 /** Au-delà de ce nombre de jours sans sauvegarde, la pastille passe en « warn » (DESIGN.md). */
 export const BACKUP_OLD_AFTER_DAYS = 3;
 

@@ -13,6 +13,7 @@ import { type BackupConfig, EMPTY_CONFIG, folderDisplayName, isConfigured, parse
 import { readStatus, runBackup, type RunOutcome } from './run';
 import { AUTO_START_DELAY_MS, BACKUP_CONFIG_KEY, BACKUP_KDF, BACKUP_KDF_FALLBACK, BACKUP_STATE_KEY } from './settings';
 import { sodiumEngine } from './sodium';
+import { cancelBackgroundBackup, scheduleBackgroundBackup } from './task';
 import { type BackupProblem, type BackupStatus, EMPTY_STATUS, pendingProblem } from './status';
 
 export type { RunOutcome } from './run';
@@ -109,6 +110,11 @@ export function BackupProvider({ children }: { children: ReactNode }) {
     };
   }, [loading, configured, unlocked, run]);
 
+  // Tâche de fond inscrite dès que la sauvegarde est configurée.
+  useEffect(() => {
+    if (!loading && configured) scheduleBackgroundBackup();
+  }, [loading, configured]);
+
   const value = useMemo<BackupState>(
     () => ({
       loading,
@@ -153,6 +159,7 @@ export function BackupProvider({ children }: { children: ReactNode }) {
       refresh,
 
       async forget() {
+        await cancelBackgroundBackup();
         await secureStore.remove(BACKUP_CONFIG_KEY);
         await secureStore.remove(BACKUP_STATE_KEY);
         setConfig(EMPTY_CONFIG);
