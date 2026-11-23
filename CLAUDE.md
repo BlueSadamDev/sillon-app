@@ -40,6 +40,13 @@
 - Le format du fichier porte un numéro de version, pour pouvoir relire les anciennes sauvegardes.
 - Gérer proprement les cas « dossier inaccessible », « permission perdue », « app pCloud absente », avec un message clair et le bouton pour rechoisir le dossier.
 
+## Préparer le partage (sans le construire)
+- Le partage avec d'autres personnes et la collaboration sont possibles à long terme (cahier des charges, section 7, « Plus tard ») : **ne rien construire pour eux** (ni serveur, ni réseau, ni fusion automatique), mais ne pas se fermer la porte :
+  1. chaque note garde un identifiant unique, sa date de modification, un **identifiant d'auteur** (celui du compte local) et l'appareil de la dernière modification ;
+  2. **toutes** les écritures de notes (création, modification, suppression, déplacement) passent par `src/db/`, jamais directement depuis un écran ou un autre module ;
+  3. le contenu d'une note ne contient aucun réglage propre au téléphone (ces réglages vivent à part).
+- Le partage simple (lot 2.1) passe par le menu de partage d'Android : il ne demande pas la permission Internet et ne doit jamais l'ajouter.
+
 ## IA locale
 - **100 % sur le téléphone**, avec `llama.rn`. Aucun appel réseau dans le code de l'IA.
 - Modèle de rédaction : LFM2.5 1.2B Instruct (Q4_K_M), déjà validé sur le Samsung Galaxy S21 dans le projet Aube. Modèle d'embeddings : choisi au lot 0, résultat dans un rapport `docs/`.
@@ -58,6 +65,7 @@
 - **Lot 2** : sauvegarde chiffrée vers le dossier pCloud, restauration testée.
 - **Lot 3** : recherche par le sens et notes liées.
 - **Lot 4** : insights (résumés, tags proposés, questions, bilan de la semaine).
+- **Suite** (cahier des charges, section 7) : lot 1.1 (confort d'écriture, juste après la fusion du lot 2), lot 2.1 (partage simple), lot 4.1 (remise en forme), lot 5 (actions), lot 6 (dictée vocale locale, avec un banc d'essai d'abord).
 
 ## Design
 Lire [DESIGN.md](DESIGN.md) avant toute modification d'interface et le respecter. Tant que DESIGN.md n'existe pas (lot 0), garder une interface minimale et lisible, sans travail graphique.
@@ -74,7 +82,7 @@ Tout texte affiché passe par `src/texts/` et respecte la charte des textes de D
 
 ## Dépendances
 - Pour ajouter un module Expo : `npx expo install <nom>`, jamais `npm install`.
-- Modules prévus (à ajouter seulement quand le lot en a besoin, avec validation) : `expo-sqlite`, `expo-secure-store`, `expo-local-authentication`, `expo-dev-client`, `expo-build-properties`, `expo-file-system` (accès au dossier pCloud), `expo-document-picker` (import du modèle, restauration), `expo-background-task` + `expo-task-manager` (sauvegarde quotidienne), `jest-expo`, une bibliothèque de rendu Markdown et une de chiffrement (choisies au lot 0), `llama.rn` (lot 3).
+- Modules prévus (à ajouter seulement quand le lot en a besoin, avec validation) : `expo-sqlite`, `expo-secure-store`, `expo-local-authentication`, `expo-dev-client`, `expo-build-properties`, `expo-file-system` (accès au dossier pCloud), `expo-document-picker` (import du modèle, restauration), `expo-background-task` + `expo-task-manager` (sauvegarde quotidienne), `jest-expo`, une bibliothèque de rendu Markdown et une de chiffrement (choisies au lot 0), `llama.rn` (lot 3), `expo-clipboard` (lot 1.1), `expo-sharing` et `expo-print` (lot 2.1), `whisper.rn` (lot 6, avec la permission micro).
 - Ne jamais ajouter manuellement `expo-modules-core` ni `expo-modules-autolinking` dans `package.json`. Lancer `npx expo install --fix` si nécessaire.
 - **Dependabot** : ne jamais fusionner une PR Dependabot qui touche les dépendances npm. À la place : `npx expo install --check`, puis `npx expo install --fix` sur une branche dédiée, et fermer la PR avec une explication. Les PR sur les actions GitHub peuvent être fusionnées après un build réussi.
 
