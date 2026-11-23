@@ -233,6 +233,22 @@ export const t = {
       failed: 'La restauration n’a pas abouti. Tes notes n’ont pas changé.',
     },
   },
+  exportPlain: {
+    button: 'Exporter mes notes en clair',
+    hint: 'Crée un fichier ZIP lisible partout, avec une note par fichier Markdown.',
+    warningTitle: 'Exporter en clair\u00a0?',
+    warningText:
+      'Le fichier ZIP ne sera pas protégé\u00a0: toute personne qui l’ouvre pourra lire tes notes. Range-le dans un dossier du téléphone plutôt que dans ton cloud, et supprime-le quand tu n’en as plus besoin.',
+    cancel: 'Annuler',
+    choose: 'Choisir le dossier',
+    running: 'Export en cours…',
+    done: (folder: string) => (folder ? `Export enregistré dans «\u00a0${folder}\u00a0».` : 'Export enregistré.'),
+    failed: 'L’export n’a pas pu être écrit dans ce dossier. Choisis un autre dossier, par exemple Téléchargements.',
+    zipRoot: 'Sillon',
+    zipArchives: 'Archives',
+    zipTrash: 'Corbeille',
+    untitled: 'Sans titre',
+  },
   passwordScreen: {
     title: 'Changer le mot de passe',
     current: 'Mot de passe actuel',

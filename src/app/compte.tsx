@@ -1,5 +1,6 @@
 // Compte (DESIGN.md, « Écrans du lot 1 », n° 9) : Sécurité, Sauvegarde (lot 2), Données.
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -10,6 +11,7 @@ import { BackHeader } from '@/components/BackHeader';
 import { SectionLabel } from '@/components/notes';
 import { useToast } from '@/components/Toast';
 import { PrimaryButton, ProblemText, SecondaryButton, TextLink } from '@/components/ui';
+import { exportPlainZip } from '@/backup/exportDevice';
 import { daysBetween } from '@/backup/status';
 import { openNotes } from '@/db/expoDb';
 import { shortDate } from '@/texts/dates';
@@ -21,6 +23,7 @@ export default function AccountScreen() {
   const backup = useBackup();
   const toast = useToast();
   const a = t.accountScreen;
+  const [exporting, setExporting] = useState(false);
 
   const b = t.backup;
 
@@ -40,6 +43,22 @@ export default function AccountScreen() {
     const days = daysBetween(last, now);
     if (days === 0) return b.lastToday(shortDate(last, now));
     return days === 1 ? b.lastYesterday : b.lastDays(days);
+  }
+
+  function confirmExport() {
+    const e = t.exportPlain;
+    Alert.alert(e.warningTitle, e.warningText, [
+      { text: e.cancel, style: 'cancel' },
+      { text: e.choose, onPress: () => void runExport() },
+    ]);
+  }
+
+  async function runExport() {
+    setExporting(true);
+    const result = await exportPlainZip();
+    setExporting(false);
+    if (result.ok) toast({ message: t.exportPlain.done(result.folder) });
+    else if (result.problem === 'failed') toast({ message: t.exportPlain.failed });
   }
 
   function confirmWipe() {
@@ -165,6 +184,14 @@ export default function AccountScreen() {
 
         <View style={styles.group}>
           <SectionLabel>{a.data}</SectionLabel>
+          <View style={[styles.card, styles.block]}>
+            <Text style={type.secondary}>{t.exportPlain.hint}</Text>
+            <SecondaryButton
+              label={exporting ? t.exportPlain.running : t.exportPlain.button}
+              onPress={confirmExport}
+              disabled={exporting}
+            />
+          </View>
           <View style={[styles.card, styles.block]}>
             <Text style={type.secondary}>{a.wipeHint}</Text>
             <SecondaryButton label={a.wipe} onPress={confirmWipe} />
