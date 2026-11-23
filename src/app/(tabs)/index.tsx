@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAccount } from '@/account/AccountProvider';
 import { BackupBadge } from '@/backup/ui/BackupBadge';
+import { BackupProblem } from '@/backup/ui/BackupProblem';
 import { SwipeableRow } from '@/components/SwipeableRow';
 import { useToast } from '@/components/Toast';
 import { InsightCard, NoteRow, PinnedCard, QuickCapture, SectionLabel } from '@/components/notes';
@@ -78,6 +79,7 @@ export default function Home() {
           </Pressable>
         </View>
 
+        <BackupProblem />
         <InsightCard text={t.home.insightWaiting} />
         <QuickCapture onSubmit={capture} />
 

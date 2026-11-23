@@ -84,3 +84,14 @@ export function autoBackupDue(configured: boolean, s: BackupStatus, now: Date): 
   if (s.lastAutoAttemptAt !== null && now.getTime() - s.lastAutoAttemptAt < AUTO_RETRY_AFTER_MIN * 60_000) return false;
   return true;
 }
+
+/**
+ * Après une vérification de l'accès au dossier : nouvel état à enregistrer, ou null si rien ne change.
+ * Accès perdu : problème « dossier inaccessible » ; accès revenu : ce problème est effacé.
+ */
+export function afterAccessCheck(s: BackupStatus, lost: boolean, now: number): BackupStatus | null {
+  const pending = pendingProblem(s);
+  if (lost && pending !== 'folder-lost') return { ...s, lastProblem: 'folder-lost', lastProblemAt: now };
+  if (!lost && pending === 'folder-lost') return { ...s, lastProblem: null, lastProblemAt: null };
+  return null;
+}

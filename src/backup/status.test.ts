@@ -1,4 +1,4 @@
-import { autoBackupDue, backupFileName, badgeFor, daysBetween, EMPTY_STATUS, isBackupName, parseStatus, pendingProblem } from './status';
+import { afterAccessCheck, autoBackupDue, backupFileName, badgeFor, daysBetween, EMPTY_STATUS, isBackupName, parseStatus, pendingProblem } from './status';
 import { fakeFolder } from './testing/fakeFolder';
 import { writeVerified } from './write';
 
@@ -58,6 +58,22 @@ describe('sauvegarde automatique', () => {
     const tried = (min: number) => ({ ...EMPTY_STATUS, lastAutoAttemptAt: now.getTime() - min * 60_000 });
     expect(autoBackupDue(true, tried(10), now)).toBe(false);
     expect(autoBackupDue(true, tried(61), now)).toBe(true);
+  });
+});
+
+describe('vérification de l’accès au dossier', () => {
+  it('note la perte d’accès une seule fois, puis l’efface quand l’accès revient', () => {
+    const ok = { ...EMPTY_STATUS, lastSuccessAt: 100 };
+    const lost = afterAccessCheck(ok, true, 200);
+    expect(lost).toEqual({ ...ok, lastProblem: 'folder-lost', lastProblemAt: 200 });
+    expect(afterAccessCheck(lost!, true, 300)).toBeNull();
+    expect(afterAccessCheck(lost!, false, 300)).toEqual({ ...ok, lastProblem: null, lastProblemAt: null });
+    expect(afterAccessCheck(ok, false, 300)).toBeNull();
+  });
+
+  it('ne cache pas une sauvegarde ratée quand le dossier est accessible', () => {
+    const failed = { ...EMPTY_STATUS, lastProblem: 'write-failed' as const, lastProblemAt: 200 };
+    expect(afterAccessCheck(failed, false, 300)).toBeNull();
   });
 });
 

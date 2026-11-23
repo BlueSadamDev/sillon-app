@@ -13,8 +13,15 @@ import { folderOps, waitMs } from './device';
 import { buildPayload } from './payload';
 import { BACKUP_CONFIG_KEY, BACKUP_KEEP, BACKUP_STATE_KEY, DELETE_DELAY_MS, VERIFY_DELAY_MS } from './settings';
 import { sodiumEngine } from './sodium';
-import { autoBackupDue, backupFileName, type BackupProblem, type BackupStatus, parseStatus } from './status';
-import { rotateVerified, writeVerified } from './write';
+import {
+  afterAccessCheck,
+  autoBackupDue,
+  backupFileName,
+  type BackupProblem,
+  type BackupStatus,
+  parseStatus,
+} from './status';
+import { type FolderOps, rotateVerified, writeVerified } from './write';
 
 export type RunOutcome = { ok: true } | { ok: false; problem: BackupProblem | 'busy' | 'not-configured' | 'not-due' };
 
@@ -24,6 +31,19 @@ export async function readStatus(): Promise<BackupStatus> {
 
 async function writeStatus(next: BackupStatus): Promise<void> {
   await secureStore.set(BACKUP_STATE_KEY, JSON.stringify(next));
+}
+
+/**
+ * Vérification légère de l'accès au dossier (lecture de la liste, sans écrire) : note le problème
+ * « dossier inaccessible », ou l'efface quand l'accès est revenu.
+ */
+async function checkAccess(ops: FolderOps, status: BackupStatus): Promise<void> {
+  const lost = await ops.names().then(
+    () => false,
+    () => true,
+  );
+  const next = afterAccessCheck(status, lost, Date.now());
+  if (next) await writeStatus(next);
 }
 
 // Une seule action à la fois dans le dossier pCloud (écran, ouverture et tâche de fond confondus).
@@ -43,7 +63,12 @@ export async function runBackup(auto: boolean): Promise<RunOutcome> {
     let status = await readStatus();
     const now = new Date();
     if (auto) {
-      if (!autoBackupDue(true, status, now)) return { ok: false, problem: 'not-due' };
+      if (!autoBackupDue(true, status, now)) {
+        // Pas de sauvegarde à faire : on vérifie quand même que le dossier reste accessible
+        // (permission perdue, app pCloud désinstallée ou déconnectée, téléphone redémarré).
+        await checkAccess(folderOps(config.folder.uri), status);
+        return { ok: false, problem: 'not-due' };
+      }
       status = { ...status, lastAutoAttemptAt: now.getTime() };
       await writeStatus(status);
     }

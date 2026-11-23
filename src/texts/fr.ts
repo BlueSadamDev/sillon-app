@@ -151,11 +151,13 @@ export const t = {
     running: 'Sauvegarde en cours…',
     done: 'Sauvegardé.',
     problems: {
-      'folder-lost': 'Sillon n’a plus accès à ton dossier pCloud. Choisis-le à nouveau.',
+      'folder-lost':
+        'Sillon n’a plus accès à ton dossier pCloud. Vérifie que l’app pCloud est installée et connectée, puis choisis le dossier à nouveau.',
       'write-failed':
         'La sauvegarde n’est pas arrivée dans ton dossier pCloud. Vérifie que l’app pCloud est installée et connectée, puis réessaie.',
     },
     chooseAgain: 'Choisir le dossier à nouveau',
+    retry: 'Réessayer',
   },
   backupSetup: {
     title: 'Configurer la sauvegarde',
