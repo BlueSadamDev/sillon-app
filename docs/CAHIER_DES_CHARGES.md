@@ -1,7 +1,8 @@
 # Cahier des charges – Sillon
 
 Nom de l'app : **Sillon** (application de notes personnelle avec IA locale).
-Version : 0.4 (22 novembre 2026). Changements par rapport à la 0.3 (décisions du lot 1) : archive des notes, glissement sur l'accueil (corbeille, archive), bouton « Enregistrer » dans l'éditeur, carte d'insight au-dessus de la capture rapide, règle de la capture rapide, tags écrits `#mot`, export en clair reporté au lot 2.
+Version : 0.5 (22 novembre 2026). Changements par rapport à la 0.4 : feuille de route complétée par la remise en forme des notes (F8, lot 4.1) et les actions (F9, lot 5).
+Version 0.4 (22 novembre 2026). Changements par rapport à la 0.3 (décisions du lot 1) : archive des notes, glissement sur l'accueil (corbeille, archive), bouton « Enregistrer » dans l'éditeur, carte d'insight au-dessus de la capture rapide, règle de la capture rapide, tags écrits `#mot`, export en clair reporté au lot 2.
 
 ## 1. Contexte et objectifs
 
@@ -89,6 +90,24 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 - **En cas d'échec** (dossier inaccessible, app pCloud déconnectée, permission perdue) : message clair sur l'accueil et dans Compte, avec le bouton pour rechoisir le dossier.
 - **Solution de repli** si l'écriture directe dans pCloud ne marche pas : export du fichier chiffré puis partage vers l'app pCloud.
 
+### F8 – Remise en forme d'une note (lot 4.1)
+- Deux boutons distincts dans le menu « … » d'une note :
+  - **« Corriger les fautes »** : orthographe, accords et ponctuation ; aucun changement de structure ni de sens ;
+  - **« Mettre en forme »** : structure seulement (titres, listes, cases à cocher, paragraphes), sans reformuler les phrases.
+- **D'abord l'app, puis l'IA** : l'app applique seule les remises en forme sûres (listes repérées, espaces en trop, lignes vides) ; l'IA ne traite que ce qui reste.
+- **Comparaison avant / après** obligatoire : l'utilisateur accepte ou refuse la proposition en entier. Rien n'est modifié sans validation.
+- **Version précédente gardée** : bouton « Annuler la remise en forme » disponible au moins jusqu'à la modification suivante de la note.
+- **Gardien** : la proposition est refusée si un chiffre, une date, un nom propre, un lien `[[ ]]` ou un tag `#mot` de la note d'origine a disparu ou changé, ou si le texte a perdu plus d'une part réglable de ses mots (réglage dans `src/ai/settings.ts`). En cas de refus : nouvelle tentative, puis message « Sillon n'a pas réussi à remettre en forme cette note sans la modifier. »
+- **Notes longues** : traitement section par section (une section = un titre ou un bloc d'environ 1 500 mots au plus), puis assemblage par l'app.
+
+### F9 – Actions (lot 5)
+- **Actions explicites (5a, sans IA)** : l'app relève les cases à cocher `- [ ]` et `- [x]` de chaque note, et les dates écrites dans la même ligne (« vendredi », « 15 décembre », « demain »), traduites en date par l'app.
+- **Tableau d'actions d'une page (5a)** : écran ouvert depuis une page, qui rassemble les actions de la page et de ses sous-notes. Colonnes : action, note d'origine (lien), échéance, fait ou pas. Tri par échéance, filtre « à faire / faites ». Cocher dans le tableau coche la case dans la note : **la note reste la seule source**, le tableau est calculé.
+- **Actions proposées par l'IA (5b)** : l'IA repère les actions implicites (« il faudrait que je rappelle le plombier »), **une note à la fois**. Chaque proposition cite la phrase d'origine ; sans phrase d'origine retrouvée mot pour mot dans la note, elle est refusée. L'utilisateur accepte (la proposition devient une case `- [ ]` ajoutée dans la note, sous la phrase d'origine ou dans une section « Actions »), modifie ou refuse. Une proposition refusée n'est plus reproposée pour la même phrase.
+- **Doublons** : l'app écarte une proposition proche d'une action existante de la même note.
+- **Ma semaine (5c)** : vue qui regroupe les actions datées de toutes les notes, jour par jour sur 7 jours, plus « En retard » et « Sans date ». Le bilan de la semaine (F5) peut s'y appuyer.
+- Pas de base de données façon Notion : le tableau et « Ma semaine » sont des écrans calculés à partir des notes.
+
 ## 5. Règles de l'IA
 
 - 100 % local : le modèle tourne sur le téléphone, importé à la main (fichier vérifié par taille et empreinte SHA-256), jamais téléchargé par l'app.
@@ -116,7 +135,12 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 - **Lot 2 – Sauvegarde** : sauvegarde chiffrée vers le dossier pCloud (configuration, automatique, rotation), restauration testée, état sur l'accueil, export en clair (ZIP).
 - **Lot 3 – Recherche par le sens** : embeddings, notes liées, recherche par le sens.
 - **Lot 4 – Insights** : import du modèle, résumés et tags proposés, questions sur ses notes, bilan de la semaine, carte d'insight sur l'accueil.
-- **Plus tard** : organisation de la semaine (tâches extraites des notes), bases de données façon Notion, import de PDF, version sur ordinateur avec synchronisation.
+- **Lot 4.1 – Remise en forme** (F8) : « Corriger les fautes », puis « Mettre en forme », avec comparaison avant / après, annulation et gardien.
+- **Lot 5 – Actions** (F9) :
+  - 5a : actions explicites et tableau d'actions par page, sans IA ;
+  - 5b : actions implicites proposées par l'IA, validées une par une ;
+  - 5c : vue « Ma semaine ».
+- **Plus tard** : bases de données façon Notion, import de PDF, version sur ordinateur avec synchronisation.
 
 ## 8. Points ouverts et risques
 
@@ -126,4 +150,7 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 - **Mot de passe de sauvegarde perdu** = sauvegardes illisibles. Avertissement obligatoire.
 - **Perte du téléphone sans sauvegarde récente** = perte des notes depuis la dernière sauvegarde.
 - **Qualité des insights** avec un modèle de 1,2 milliard de paramètres : fragile sur la synthèse de textes libres. À mesurer au lot 4 sur notes fictives.
+- **Remise en forme (F8)** : un modèle de 1,2 milliard de paramètres peut retirer ou modifier du contenu. Le gardien et la comparaison avant / après sont obligatoires ; mesurer au lot 4.1 sur notes fictives le taux de propositions refusées par le gardien.
+- **Actions implicites (F9, 5b)** : risque d'actions inventées ou en double. Parades : phrase d'origine obligatoire, validation une par une, filtre des doublons. Pour une page avec beaucoup de sous-notes, le traitement note par note est plus lent : à mesurer.
+- **Dates écrites en français** (F9, 5a) : « vendredi » ou « fin du mois » demandent des règles claires (vendredi = le prochain à venir). Les règles retenues seront écrites dans le cahier au lot 5a.
 - **Changement de téléphone** (par exemple un Pixel 8 Pro) : refaire les mesures de l'IA.
