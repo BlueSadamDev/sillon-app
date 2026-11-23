@@ -89,3 +89,29 @@ export const ArchiveIcon = (p: IconProps) => (
     {(c) => <Path d="M3.5 5 H20.5 V9 H3.5 Z M5 9 V19.5 H19 V9 M9.5 13 H14.5" stroke={c} {...line} />}
   </Icon>
 );
+
+export const CheckIcon = (p: IconProps) => (
+  <Icon {...p}>{(c) => <Path d="M5 12.5 L10 17.5 L19 7" stroke={c} {...line} />}</Icon>
+);
+
+export const ClockIcon = (p: IconProps) => (
+  <Icon {...p}>
+    {(c) => (
+      <>
+        <Circle cx={12} cy={12} r={8.5} stroke={c} {...line} />
+        <Path d="M12 7.5 V12 L15 14" stroke={c} {...line} />
+      </>
+    )}
+  </Icon>
+);
+
+export const AlertIcon = (p: IconProps) => (
+  <Icon {...p}>
+    {(c) => (
+      <>
+        <Circle cx={12} cy={12} r={8.5} stroke={c} {...line} />
+        <Path d="M12 7.5 V13 M12 16.5 V16.6" stroke={c} {...line} />
+      </>
+    )}
+  </Icon>
+);

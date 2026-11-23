@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAccount } from '@/account/AccountProvider';
+import { BackupBadge } from '@/backup/ui/BackupBadge';
 import { SwipeableRow } from '@/components/SwipeableRow';
 import { useToast } from '@/components/Toast';
 import { InsightCard, NoteRow, PinnedCard, QuickCapture, SectionLabel } from '@/components/notes';
@@ -67,6 +68,7 @@ export default function Home() {
             <Text style={type.secondary}>{longDate(now)}</Text>
             <Text style={type.greeting}>{greeting(now)}</Text>
           </View>
+          <BackupBadge now={now} />
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t.home.account(username)}
@@ -115,7 +117,7 @@ export default function Home() {
 const styles = StyleSheet.create({
   fill: { flex: 1, backgroundColor: colors.bg },
   screen: { padding: space.screenHome, gap: space.block },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   headerText: { flex: 1, gap: 2 },
   avatar: {
     width: TOUCH,

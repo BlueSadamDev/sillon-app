@@ -9,8 +9,10 @@ import { LOCK_DELAYS_MIN } from '@/account/settings';
 import { BackHeader } from '@/components/BackHeader';
 import { SectionLabel } from '@/components/notes';
 import { useToast } from '@/components/Toast';
-import { PrimaryButton, SecondaryButton, TextLink } from '@/components/ui';
+import { PrimaryButton, ProblemText, SecondaryButton, TextLink } from '@/components/ui';
+import { daysBetween } from '@/backup/status';
 import { openNotes } from '@/db/expoDb';
+import { shortDate } from '@/texts/dates';
 import { t } from '@/texts/fr';
 import { colors, font, radius, space, TOUCH, type } from '@/theme';
 
@@ -20,8 +22,24 @@ export default function AccountScreen() {
   const toast = useToast();
   const a = t.accountScreen;
 
+  const b = t.backup;
+
   async function changeFolder() {
     if (await backup.chooseFolder()) toast({ message: a.backupFolderChanged });
+  }
+
+  async function backupNow() {
+    const result = await backup.backupNow();
+    if (result.ok) toast({ message: b.done });
+  }
+
+  function lastBackupText(): string {
+    const last = backup.status.lastSuccessAt;
+    if (last === null) return b.never;
+    const now = new Date();
+    const days = daysBetween(last, now);
+    if (days === 0) return b.lastToday(shortDate(last, now));
+    return days === 1 ? b.lastYesterday : b.lastDays(days);
   }
 
   function confirmWipe() {
@@ -100,10 +118,27 @@ export default function AccountScreen() {
           <SectionLabel>{a.backup}</SectionLabel>
           {backup.configured ? (
             <View style={styles.card}>
-              <View style={[styles.block]}>
+              <View style={styles.block}>
                 <Text style={type.rowTitle}>{a.backupFolder(backup.folderName ?? '')}</Text>
-                <Text style={type.secondary}>{a.backupFirstSoon}</Text>
-                <SecondaryButton label={a.backupOtherFolder} onPress={changeFolder} />
+                {backup.problem ? (
+                  <ProblemText>{b.problems[backup.problem]}</ProblemText>
+                ) : (
+                  <Text style={type.secondary}>{lastBackupText()}</Text>
+                )}
+                {backup.problem === 'folder-lost' ? (
+                  <PrimaryButton label={b.chooseAgain} onPress={changeFolder} disabled={backup.running} />
+                ) : (
+                  <PrimaryButton
+                    label={backup.running ? b.running : b.now}
+                    onPress={backupNow}
+                    disabled={backup.running}
+                  />
+                )}
+                {backup.problem === 'folder-lost' ? (
+                  <SecondaryButton label={b.now} onPress={backupNow} disabled={backup.running} />
+                ) : (
+                  <SecondaryButton label={a.backupOtherFolder} onPress={changeFolder} disabled={backup.running} />
+                )}
               </View>
               <Pressable
                 accessibilityRole="button"

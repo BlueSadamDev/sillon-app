@@ -120,7 +120,6 @@ export const t = {
     backupOtherFolder: 'Choisir un autre dossier',
     backupFolderChanged: 'Dossier de sauvegarde changé.',
     backupChangePassword: 'Changer le mot de passe de sauvegarde',
-    backupFirstSoon: 'La sauvegarde est prête. Sillon déposera ses copies dans ce dossier à partir de la prochaine version.',
     data: 'Données',
     wipe: 'Effacer toutes les données',
     wipeHint: 'Efface toutes tes notes et ton compte de ce téléphone.',
@@ -133,6 +132,30 @@ export const t = {
     wipeConfirm: 'Tout effacer',
     keep: 'Garder mes données',
     benches: 'Bancs d’essai du lot 0',
+  },
+  backup: {
+    badge: {
+      setup: 'Sauvegarde à configurer',
+      never: 'Pas encore sauvegardé',
+      check: 'À vérifier',
+      today: 'À jour',
+      yesterday: 'Hier',
+      days: (n: number) => `Il y a ${n}\u00a0jours`,
+    },
+    badgeA11y: (label: string) => `Sauvegarde\u00a0: ${label}. Ouvre le compte.`,
+    lastToday: (time: string) => `Sauvegardé aujourd’hui à ${time}.`,
+    lastYesterday: 'Dernière sauvegarde hier.',
+    lastDays: (n: number) => `Dernière sauvegarde il y a ${n}\u00a0jours.`,
+    never: 'Aucune sauvegarde pour l’instant. Touche «\u00a0Sauvegarder maintenant\u00a0» pour la première.',
+    now: 'Sauvegarder maintenant',
+    running: 'Sauvegarde en cours…',
+    done: 'Sauvegardé.',
+    problems: {
+      'folder-lost': 'Sillon n’a plus accès à ton dossier pCloud. Choisis-le à nouveau.',
+      'write-failed':
+        'La sauvegarde n’est pas arrivée dans ton dossier pCloud. Vérifie que l’app pCloud est installée et connectée, puis réessaie.',
+    },
+    chooseAgain: 'Choisir le dossier à nouveau',
   },
   backupSetup: {
     title: 'Configurer la sauvegarde',

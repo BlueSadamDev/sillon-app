@@ -16,6 +16,26 @@ export const MIN_BACKUP_PASSWORD_LENGTH = 12;
 /** Nom de la configuration de la sauvegarde dans le coffre sécurisé du téléphone (expo-secure-store). */
 export const BACKUP_CONFIG_KEY = 'sillon.backup';
 
+/** État de la dernière sauvegarde (date, problème), dans le coffre sécurisé. */
+export const BACKUP_STATE_KEY = 'sillon.backup.state';
+
+/**
+ * Nom des fichiers de sauvegarde : « sillon-AAAAMMJJ-HHMMSS.bin ». Extension « .bin » : avec un autre
+ * nom, pCloud ajoute lui-même « .bin » (lot 0). Seuls les fichiers de cette forme exacte sont à Sillon.
+ */
+export const BACKUP_PREFIX = 'sillon-';
+export const BACKUP_EXTENSION = '.bin';
+export const BACKUP_MIME = 'application/octet-stream';
+
+/**
+ * Attente entre l'écriture et la relecture de la liste du dossier (pCloud peut signaler une erreur
+ * sur une écriture réussie : seule la liste fait foi).
+ */
+export const VERIFY_DELAY_MS = 3000;
+
+/** Au-delà de ce nombre de jours sans sauvegarde, la pastille passe en « warn » (DESIGN.md). */
+export const BACKUP_OLD_AFTER_DAYS = 3;
+
 // --- Bancs d'essai du lot 0 ---
 
 /** Profils Argon2id mesurés sur le téléphone (opsLimit = nombre de passes, memLimit en octets). */
