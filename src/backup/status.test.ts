@@ -1,5 +1,6 @@
-import { backupFileName, badgeFor, daysBetween, EMPTY_STATUS, isBackupName, parseStatus, pendingProblem } from './status';
-import { writeVerified, type FolderOps } from './write';
+import { autoBackupDue, backupFileName, badgeFor, daysBetween, EMPTY_STATUS, isBackupName, parseStatus, pendingProblem } from './status';
+import { fakeFolder } from './testing/fakeFolder';
+import { writeVerified } from './write';
 
 const now = new Date(2026, 10, 23, 14, 5, 0);
 const at = (d: number, h = 10) => new Date(2026, 10, d, h).getTime();
@@ -38,28 +39,27 @@ describe('pastille de sauvegarde', () => {
   });
 
   it('relit un état enregistré et ignore un état abîmé', () => {
-    const s = { lastSuccessAt: 5, lastFileName: 'sillon-20261123-140500.bin', lastProblem: 'write-failed' as const, lastProblemAt: 6 };
+    const s = { lastSuccessAt: 5, lastFileName: 'sillon-20261123-140500.bin', lastProblem: 'write-failed' as const, lastProblemAt: 6, lastAutoAttemptAt: 7 };
     expect(parseStatus(JSON.stringify(s))).toEqual(s);
     expect(parseStatus('{"lastProblem":"autre"}')).toEqual(EMPTY_STATUS);
     expect(parseStatus('pas du json')).toEqual(EMPTY_STATUS);
   });
 });
 
-/** Faux dossier pCloud : peut signaler une erreur tout en écrivant, ou perdre la permission. */
-function fakeFolder(opts: { errorButWrites?: boolean; dropsWrite?: boolean; lost?: boolean } = {}) {
-  const files: string[] = ['photo.jpg'];
-  const ops: FolderOps = {
-    async names() {
-      if (opts.lost) throw new Error('permission perdue');
-      return [...files];
-    },
-    async write(name) {
-      if (!opts.dropsWrite) files.push(name);
-      if (opts.errorButWrites || opts.dropsWrite) throw new Error('pCloud : erreur');
-    },
-  };
-  return { ops, files };
-}
+describe('sauvegarde automatique', () => {
+  it('a lieu au plus une fois par jour, seulement si la sauvegarde est configurée', () => {
+    expect(autoBackupDue(false, EMPTY_STATUS, now)).toBe(false);
+    expect(autoBackupDue(true, EMPTY_STATUS, now)).toBe(true);
+    expect(autoBackupDue(true, { ...EMPTY_STATUS, lastSuccessAt: at(23, 0) }, now)).toBe(false);
+    expect(autoBackupDue(true, { ...EMPTY_STATUS, lastSuccessAt: at(22, 23) }, now)).toBe(true);
+  });
+
+  it('attend une heure après une tentative ratée', () => {
+    const tried = (min: number) => ({ ...EMPTY_STATUS, lastAutoAttemptAt: now.getTime() - min * 60_000 });
+    expect(autoBackupDue(true, tried(10), now)).toBe(false);
+    expect(autoBackupDue(true, tried(61), now)).toBe(true);
+  });
+});
 
 const noWait = async () => {};
 const bytes = new Uint8Array([1, 2, 3]);
@@ -72,16 +72,16 @@ describe('écriture vérifiée dans le dossier', () => {
   });
 
   it('se fie à la liste quand pCloud signale une erreur sur une écriture réussie', async () => {
-    const { ops } = fakeFolder({ errorButWrites: true });
+    const { ops } = fakeFolder(undefined, { errorButWrites: true });
     expect(await writeVerified(ops, 'sillon-a.bin', bytes, noWait)).toEqual({ ok: true, name: 'sillon-a.bin', reportedError: true });
   });
 
   it('échoue si le fichier n’est pas dans la liste, ou si le dossier est inaccessible', async () => {
-    expect(await writeVerified(fakeFolder({ dropsWrite: true }).ops, 'x.bin', bytes, noWait)).toEqual({
+    expect(await writeVerified(fakeFolder(undefined, { dropsWrite: true }).ops, 'x.bin', bytes, noWait)).toEqual({
       ok: false,
       problem: 'write-failed',
     });
-    expect(await writeVerified(fakeFolder({ lost: true }).ops, 'x.bin', bytes, noWait)).toEqual({
+    expect(await writeVerified(fakeFolder(undefined, { lost: true }).ops, 'x.bin', bytes, noWait)).toEqual({
       ok: false,
       problem: 'folder-lost',
     });

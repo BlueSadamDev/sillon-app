@@ -33,6 +33,21 @@ export const BACKUP_MIME = 'application/octet-stream';
  */
 export const VERIFY_DELAY_MS = 3000;
 
+/** Rotation : nombre de sauvegardes datées gardées dans le dossier (cahier des charges, F7). */
+export const BACKUP_KEEP = 10;
+
+/**
+ * Attente avant chaque suppression de la rotation : pCloud refuse les actions trop rapprochées
+ * (lot 0 : deux suppressions dans la même seconde refusées).
+ */
+export const DELETE_DELAY_MS = 5000;
+
+/** Attente entre le déverrouillage et la sauvegarde automatique (l'accueil s'affiche d'abord). */
+export const AUTO_START_DELAY_MS = 2000;
+
+/** Après une sauvegarde automatique ratée, délai avant une nouvelle tentative automatique (minutes). */
+export const AUTO_RETRY_AFTER_MIN = 60;
+
 /** Au-delà de ce nombre de jours sans sauvegarde, la pastille passe en « warn » (DESIGN.md). */
 export const BACKUP_OLD_AFTER_DAYS = 3;
 

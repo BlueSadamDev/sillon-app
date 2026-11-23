@@ -1,6 +1,6 @@
 // État de la sauvegarde (calcul pur) : nom des fichiers, dernière réussite, pastille de l'accueil.
 import { fileStamp } from './rotation';
-import { BACKUP_EXTENSION, BACKUP_OLD_AFTER_DAYS, BACKUP_PREFIX } from './settings';
+import { AUTO_RETRY_AFTER_MIN, BACKUP_EXTENSION, BACKUP_OLD_AFTER_DAYS, BACKUP_PREFIX } from './settings';
 
 /** folder-lost : dossier inaccessible ou permission perdue ; write-failed : fichier absent après l'écriture. */
 export type BackupProblem = 'folder-lost' | 'write-failed';
@@ -10,9 +10,11 @@ export type BackupStatus = {
   lastFileName: string | null;
   lastProblem: BackupProblem | null;
   lastProblemAt: number | null;
+  /** Dernière tentative de sauvegarde automatique (à l'ouverture ou en tâche de fond). */
+  lastAutoAttemptAt: number | null;
 };
 
-export const EMPTY_STATUS: BackupStatus = { lastSuccessAt: null, lastFileName: null, lastProblem: null, lastProblemAt: null };
+export const EMPTY_STATUS: BackupStatus = { lastSuccessAt: null, lastFileName: null, lastProblem: null, lastProblemAt: null, lastAutoAttemptAt: null };
 
 export function parseStatus(raw: string | null): BackupStatus {
   if (raw === null) return EMPTY_STATUS;
@@ -24,6 +26,7 @@ export function parseStatus(raw: string | null): BackupStatus {
       lastFileName: typeof d.lastFileName === 'string' ? d.lastFileName : null,
       lastProblem: d.lastProblem === 'folder-lost' || d.lastProblem === 'write-failed' ? d.lastProblem : null,
       lastProblemAt: num(d.lastProblemAt),
+      lastAutoAttemptAt: num(d.lastAutoAttemptAt),
     };
   } catch {
     return EMPTY_STATUS;
@@ -69,4 +72,15 @@ export function badgeFor(configured: boolean, s: BackupStatus, now: Date): Badge
   if (s.lastSuccessAt === null) return { tone: 'warn', kind: 'never' };
   const days = daysBetween(s.lastSuccessAt, now);
   return { tone: days > BACKUP_OLD_AFTER_DAYS ? 'warn' : 'ok', kind: 'days', days };
+}
+
+/**
+ * Sauvegarde automatique à faire maintenant ? Au plus une réussite par jour de calendrier (F7) ;
+ * après un échec, on attend un moment avant de réessayer (pCloud supporte mal les actions rapprochées).
+ */
+export function autoBackupDue(configured: boolean, s: BackupStatus, now: Date): boolean {
+  if (!configured) return false;
+  if (s.lastSuccessAt !== null && daysBetween(s.lastSuccessAt, now) === 0) return false;
+  if (s.lastAutoAttemptAt !== null && now.getTime() - s.lastAutoAttemptAt < AUTO_RETRY_AFTER_MIN * 60_000) return false;
+  return true;
 }
