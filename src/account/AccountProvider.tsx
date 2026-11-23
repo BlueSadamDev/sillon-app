@@ -3,13 +3,30 @@
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
-import { afterPaint, argon2id, askBiometrics, biometricsAvailable, newSalt, secureStore } from './device';
+import { openNotes } from '@/db/expoDb';
+import { setNoteIdentity } from '@/db/identity';
+
+import { afterPaint, argon2id, askBiometrics, biometricsAvailable, newSalt, newUuid, secureStore } from './device';
+import { loadDeviceId, withAuthorId } from './identity';
 import { hashPassword, verifyPassword } from './password';
 import { shouldLock } from './rules';
 import { ACCOUNT_KEY, DEFAULT_LOCK_DELAY_MIN } from './settings';
 import { type Account, parseAccount } from './store';
 
 export type Status = 'loading' | 'none' | 'locked' | 'unlocked';
+
+export type RestoredAccount = { lockDelayMin: number; authorId: string | null };
+
+/** Rend le compte et l'appareil connus de la base, puis lui fait adopter les notes sans auteur. */
+async function applyIdentity(authorId: string | null, deviceId: string | null): Promise<void> {
+  setNoteIdentity({ authorId, deviceId });
+  if (authorId === null || deviceId === null) return;
+  try {
+    await (await openNotes()).adoptUnowned();
+  } catch {
+    // Base indisponible : nouvel essai au prochain lancement.
+  }
+}
 
 type AccountState = {
   status: Status;
@@ -22,8 +39,8 @@ type AccountState = {
   offerBiometrics: boolean;
   /** Juste après la création du compte (et l'empreinte) : proposer de configurer la sauvegarde. */
   offerBackup: boolean;
-  /** lockDelayMin : délai repris d'une sauvegarde restaurée avant la création du compte. */
-  createAccount(username: string, password: string, lockDelayMin?: number): Promise<void>;
+  /** fromBackup : réglage et auteur repris d'une sauvegarde restaurée avant la création du compte. */
+  createAccount(username: string, password: string, fromBackup?: RestoredAccount): Promise<void>;
   unlockWithPassword(password: string): Promise<boolean>;
   unlockWithBiometrics(): Promise<boolean>;
   /** Active l'empreinte (après l'avoir vérifiée) ou la désactive. */
@@ -51,10 +68,23 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const [offerBiometrics, setOfferBiometrics] = useState(false);
   const [offerBackup, setOfferBackup] = useState(false);
   const backgroundSince = useRef<number | null>(null);
+  const deviceId = useRef<string | null>(null);
 
   useEffect(() => {
     (async () => {
-      const [saved, bio] = await Promise.all([secureStore.get(ACCOUNT_KEY).then(parseAccount), biometricsAvailable()]);
+      const [parsed, bio, device] = await Promise.all([
+        secureStore.get(ACCOUNT_KEY).then(parseAccount),
+        biometricsAvailable(),
+        loadDeviceId(secureStore, newUuid).catch(() => null),
+      ]);
+      let saved = parsed;
+      if (parsed) {
+        const ensured = withAuthorId(parsed, newUuid);
+        saved = ensured.account;
+        if (ensured.changed) await secureStore.set(ACCOUNT_KEY, JSON.stringify(saved));
+      }
+      deviceId.current = device;
+      await applyIdentity(saved?.authorId ?? null, device);
       setCanUseBiometrics(bio);
       setAccount(saved);
       setStatus(saved ? 'locked' : 'none');
@@ -92,10 +122,19 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       offerBiometrics,
       offerBackup,
 
-      async createAccount(username, password, lockDelayMin = DEFAULT_LOCK_DELAY_MIN) {
+      async createAccount(username, password, fromBackup) {
         await afterPaint();
         const record = hashPassword(password, argon2id, newSalt());
-        await save({ username: username.trim(), password: record, biometrics: false, lockDelayMin });
+        // Après une restauration, l'auteur de la sauvegarde est repris : c'est la même personne.
+        const authorId = fromBackup?.authorId ?? newUuid();
+        await save({
+          username: username.trim(),
+          password: record,
+          biometrics: false,
+          lockDelayMin: fromBackup?.lockDelayMin ?? DEFAULT_LOCK_DELAY_MIN,
+          authorId,
+        });
+        await applyIdentity(authorId, deviceId.current);
         setOfferBiometrics(canUseBiometrics);
         setOfferBackup(true);
         setStatus('unlocked');
@@ -145,6 +184,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 
       async forget() {
         await secureStore.remove(ACCOUNT_KEY);
+        setNoteIdentity({ authorId: null, deviceId: deviceId.current });
         setAccount(null);
         setStatus('none');
       },

@@ -72,7 +72,10 @@ export function RestoreFlow({ mode, onDone }: { mode: 'account' | 'start'; onDon
     setBusy(true);
     try {
       await afterPaint();
-      await (await openNotes()).replaceAll(step.content.notes);
+      const repo = await openNotes();
+      await repo.replaceAll(step.content.notes);
+      // Notes d'une sauvegarde de version 1 : elles reçoivent le compte et l'appareil du téléphone.
+      await repo.adoptUnowned();
     } catch {
       setBusy(false);
       return setProblem(r.problems.failed);

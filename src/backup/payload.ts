@@ -1,4 +1,6 @@
-// Contenu d'une sauvegarde (version 1, figée au lot 2), tel qu'il est chiffré.
+// Contenu d'une sauvegarde, tel qu'il est chiffré. Version 2 (préparation au partage) : chaque note
+// porte son auteur et l'appareil de sa dernière modification, la sauvegarde porte l'auteur du compte.
+// Version 1 (lot 2, avant le partage) : toujours relue ; ses notes n'ont ni auteur ni appareil (null).
 // Calcul pur, sans accès au téléphone.
 //
 // Contenu (cahier des charges, F7) : toutes les notes, y compris archives et corbeille ; l'arborescence
@@ -9,7 +11,9 @@
 import type { Note } from '@/notes/types';
 
 export const PAYLOAD_FORMAT = 'sillon-backup';
-export const PAYLOAD_VERSION = 1;
+export const PAYLOAD_VERSION = 2;
+/** Versions que l'app sait relire. */
+const READABLE_VERSIONS = [1, 2];
 
 export type BackupSettings = { lockDelayMin: number };
 
@@ -22,6 +26,8 @@ export type BackupContent = {
   schemaVersion: number;
   /** Identifiant du compte, proposé à la création du compte après une restauration. */
   username: string;
+  /** Identifiant d'auteur du compte (null pour une sauvegarde de version 1). */
+  authorId: string | null;
   settings: BackupSettings;
   notes: Note[];
 };
@@ -37,7 +43,10 @@ const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFin
 const isNumOrNull = (v: unknown) => v === null || isNum(v);
 const isStrOrNull = (v: unknown) => v === null || typeof v === 'string';
 
-function isNote(v: unknown): v is Note {
+/** Note de version 1 : sans auteur ni appareil. */
+type NoteV1 = Omit<Note, 'authorId' | 'deviceId'>;
+
+function isNoteV1(v: unknown): v is NoteV1 {
   if (typeof v !== 'object' || v === null) return false;
   const n = v as Record<string, unknown>;
   return (
@@ -54,6 +63,29 @@ function isNote(v: unknown): v is Note {
   );
 }
 
+function isNote(v: unknown): v is Note {
+  if (!isNoteV1(v)) return false;
+  const n = v as Record<string, unknown>;
+  return isStrOrNull(n.authorId) && isStrOrNull(n.deviceId);
+}
+
+/** Garde seulement les champs connus (un champ inconnu n'entre pas dans la base). */
+function cleanNote(n: Note): Note {
+  return {
+    id: n.id,
+    title: n.title,
+    body: n.body,
+    parentId: n.parentId,
+    pinned: n.pinned,
+    createdAt: n.createdAt,
+    updatedAt: n.updatedAt,
+    deletedAt: n.deletedAt,
+    archivedAt: n.archivedAt,
+    authorId: n.authorId,
+    deviceId: n.deviceId,
+  };
+}
+
 /** Relit et vérifie le contenu déchiffré. Une sauvegarde incohérente est refusée en entier. */
 export function parsePayload(text: string): { ok: true; content: BackupContent } | { ok: false; problem: PayloadProblem } {
   let data: unknown;
@@ -65,7 +97,10 @@ export function parsePayload(text: string): { ok: true; content: BackupContent }
   if (typeof data !== 'object' || data === null) return { ok: false, problem: 'not-backup' };
   const d = data as Record<string, unknown>;
   if (d.format !== PAYLOAD_FORMAT) return { ok: false, problem: 'not-backup' };
-  if (d.version !== PAYLOAD_VERSION) return { ok: false, problem: 'unknown-version' };
+  if (typeof d.version !== 'number' || !READABLE_VERSIONS.includes(d.version)) {
+    return { ok: false, problem: 'unknown-version' };
+  }
+  const v1 = d.version === 1;
   const settings = d.settings as Record<string, unknown> | null | undefined;
   if (
     !isNum(d.createdAt) ||
@@ -75,11 +110,14 @@ export function parsePayload(text: string): { ok: true; content: BackupContent }
     settings === null ||
     !isNum(settings.lockDelayMin) ||
     !Array.isArray(d.notes) ||
-    !d.notes.every(isNote)
+    !d.notes.every(v1 ? isNoteV1 : isNote) ||
+    (!v1 && !isStrOrNull(d.authorId))
   ) {
     return { ok: false, problem: 'invalid' };
   }
-  const notes = d.notes as Note[];
+  const notes = (d.notes as Note[]).map((n) =>
+    cleanNote(v1 ? { ...n, authorId: null, deviceId: null } : n),
+  );
   const ids = new Set(notes.map((n) => n.id));
   if (ids.size !== notes.length) return { ok: false, problem: 'invalid' };
   // Une note dont la parente manque revient à la racine plutôt que de rester introuvable.
@@ -88,10 +126,11 @@ export function parsePayload(text: string): { ok: true; content: BackupContent }
     ok: true,
     content: {
       format: PAYLOAD_FORMAT,
-      version: PAYLOAD_VERSION,
+      version: d.version,
       createdAt: d.createdAt,
       schemaVersion: d.schemaVersion,
       username: d.username,
+      authorId: v1 ? null : (d.authorId as string | null),
       settings: { lockDelayMin: settings.lockDelayMin },
       notes: fixed,
     },

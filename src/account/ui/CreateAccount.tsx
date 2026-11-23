@@ -9,7 +9,7 @@ import { Field, FormScreen, InfoBox, PrimaryButton, ProblemText, TextLink } from
 import { t } from '@/texts/fr';
 import { type } from '@/theme';
 
-import { useAccount } from '../AccountProvider';
+import { type RestoredAccount, useAccount } from '../AccountProvider';
 import { type AccountProblem, checkNewAccount } from '../rules';
 import { MAX_USERNAME_LENGTH, MIN_PASSWORD_LENGTH } from '../settings';
 
@@ -27,7 +27,7 @@ export function CreateAccount() {
   const [busy, setBusy] = useState(false);
   // Restauration d'une sauvegarde avant la création du compte (nouveau téléphone, F7).
   const [restoring, setRestoring] = useState(false);
-  const [restoredDelay, setRestoredDelay] = useState<number | undefined>(undefined);
+  const [restored, setRestored] = useState<RestoredAccount | undefined>(undefined);
   const toast = useToast();
 
   async function submit() {
@@ -38,7 +38,7 @@ export function CreateAccount() {
     }
     setProblem(null);
     setBusy(true);
-    await createAccount(username, password, restoredDelay);
+    await createAccount(username, password, restored);
   }
 
   if (restoring) {
@@ -48,7 +48,7 @@ export function CreateAccount() {
           mode="start"
           onDone={(content) => {
             setUsername(content.username);
-            setRestoredDelay(content.settings.lockDelayMin);
+            setRestored({ lockDelayMin: content.settings.lockDelayMin, authorId: content.authorId });
             setRestoring(false);
             toast({ message: t.restore.doneAtStart });
           }}
@@ -93,7 +93,7 @@ export function CreateAccount() {
       <InfoBox>{t.account.forgotWarning}</InfoBox>
       {problem && <ProblemText>{problem}</ProblemText>}
       <PrimaryButton label={busy ? t.account.creating : t.account.create} onPress={submit} disabled={busy} />
-      {restoredDelay === undefined && <TextLink label={t.account.restore} onPress={() => setRestoring(true)} />}
+      {restored === undefined && <TextLink label={t.account.restore} onPress={() => setRestoring(true)} />}
     </FormScreen>
   );
 }

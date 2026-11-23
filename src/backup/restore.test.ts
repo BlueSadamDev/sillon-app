@@ -1,11 +1,12 @@
 // Test « sauvegarder des notes fictives, restaurer, comparer » (CLAUDE.md, Sauvegarde vers pCloud).
 // À relancer à chaque modification du format de sauvegarde.
-import { createNotesRepo } from '@/db/notesRepo';
+import { createNotesRepo, type NoteIdentity } from '@/db/notesRepo';
 import { migrate, SCHEMA_VERSION } from '@/db/schema';
 import { memoryDb } from '@/db/testing/nodeDb';
 import { FAKE_NOTES } from '@/notes/__fixtures__/notes';
 
 import { BACKUP_V1_FILE, BACKUP_V1_PASSWORD } from './__fixtures__/backupV1';
+import { BACKUP_V2_FILE, BACKUP_V2_PASSWORD } from './__fixtures__/backupV2';
 import {
   createBackupKey,
   decryptWithKey,
@@ -29,9 +30,20 @@ async function freshRepo() {
   await migrate(db);
   let clock = 1_700_000_000_000;
   let counter = 0;
-  const repo = createNotesRepo(db, { now: () => (clock += 1000), newId: () => `id-${++counter}` });
+  const repo = createNotesRepo(db, {
+    now: () => (clock += 1000),
+    newId: () => `id-${++counter}`,
+    identity: () => identity,
+  });
   return repo;
 }
+
+// Compte et appareil fictifs (préparation au partage).
+const AUTHOR = 'auteur-fictif-1';
+let identity: NoteIdentity = { authorId: AUTHOR, deviceId: 'telephone-a' };
+beforeEach(() => {
+  identity = { authorId: AUTHOR, deviceId: 'telephone-a' };
+});
 
 /** Un carnet fictif avec sous-notes, épingle, archive et corbeille. */
 async function fakeNotebook() {
@@ -52,6 +64,7 @@ async function backup(repo: Awaited<ReturnType<typeof freshRepo>>) {
     createdAt: 1_700_000_500_000,
     schemaVersion: SCHEMA_VERSION,
     username: 'camille',
+    authorId: AUTHOR,
     settings: { lockDelayMin: 15 },
     notes: await repo.exportAll(),
   });
@@ -71,14 +84,21 @@ describe('sauvegarde puis restauration', () => {
     expect(parsed.ok).toBe(true);
     if (!parsed.ok) return;
     expect(parsed.content.username).toBe('camille');
+    expect(parsed.content.authorId).toBe(AUTHOR);
+    expect(parsed.content.version).toBe(2);
     expect(parsed.content.settings).toEqual({ lockDelayMin: 15 });
     expect(summarize(parsed.content)).toEqual({ createdAt: 1_700_000_500_000, notes: 4, archived: 2, trashed: 1 });
 
+    // Le nouveau téléphone a son propre appareil : les notes restaurées gardent ceux de la sauvegarde.
+    identity = { authorId: AUTHOR, deviceId: 'telephone-b' };
     const target = await freshRepo();
     await target.create({ title: 'Note du nouveau téléphone, remplacée' });
     await target.replaceAll(parsed.content.notes);
+    expect(await target.adoptUnowned()).toBe(0);
 
-    expect(await target.exportAll()).toEqual(await repo.exportAll());
+    const restored = await target.exportAll();
+    expect(restored).toEqual(await repo.exportAll());
+    expect(restored.every((n) => n.authorId === AUTHOR && n.deviceId === 'telephone-a')).toBe(true);
     expect(await target.tags(ids.voyage)).toEqual(['été', 'voyage']);
     expect(await target.tags(ids.tomates)).toEqual(['jardin', 'potager']);
     expect((await target.search('azulejos')).map((n) => n.id)).toEqual([ids.voyage]);
@@ -148,34 +168,88 @@ describe('ouverture d’un fichier pour la restauration', () => {
   });
 });
 
+/** Moteur au hasard prévisible : mêmes octets à chaque fois (fichiers de référence). */
+function fixedEngine(): CryptoEngine {
+  let seed = 0;
+  return { ...nobleEngine, random: (n) => Uint8Array.from({ length: n }, () => seed++ & 0xff) };
+}
+
+const FROZEN_NOTES = [
+  { id: 'a', title: 'Voyage à Lisbonne', body: FAKE_NOTES.voyage.body, parentId: null, pinned: true, createdAt: 1, updatedAt: 2, deletedAt: null, archivedAt: null },
+  { id: 'b', title: 'Jardin', body: FAKE_NOTES.jardin.body, parentId: 'a', pinned: false, createdAt: 3, updatedAt: 4, deletedAt: null, archivedAt: 5 },
+];
+
 describe('format version 1 figé', () => {
-  it('relit un fichier de version 1 fabriqué une fois pour toutes', () => {
-    const file = fromBase64(BACKUP_V1_FILE)!;
-    const dec = decryptWithPassword(file, BACKUP_V1_PASSWORD, nobleEngine);
-    expect(dec.ok).toBe(true);
-    if (!dec.ok) return;
-    const parsed = parsePayload(dec.text);
-    expect(parsed.ok && parsed.content.notes.map((n) => n.title)).toEqual(['Voyage à Lisbonne', 'Jardin']);
+  it('relit un fichier de version 1 fabriqué une fois pour toutes, sans auteur ni appareil', () => {
+    const opened = openBackup(fromBase64(BACKUP_V1_FILE)!, BACKUP_V1_PASSWORD, nobleEngine);
+    expect(opened.ok).toBe(true);
+    if (!opened.ok) return;
+    expect(opened.content.version).toBe(1);
+    expect(opened.content.authorId).toBeNull();
+    expect(opened.content.notes.map((n) => [n.title, n.authorId, n.deviceId])).toEqual([
+      ['Voyage à Lisbonne', null, null],
+      ['Jardin', null, null],
+    ]);
   });
 
-  it('produit toujours les mêmes octets pour les mêmes entrées', () => {
-    let seed = 0;
-    const fixed: CryptoEngine = {
-      ...nobleEngine,
-      random: (n) => Uint8Array.from({ length: n }, () => seed++ & 0xff),
-    };
-    const key = createBackupKey(BACKUP_V1_PASSWORD, TEST_KDF, fixed);
-    const json = buildPayload({
+  it('produit toujours les mêmes octets pour les mêmes entrées (couche de chiffrement inchangée)', () => {
+    const engine = fixedEngine();
+    const key = createBackupKey(BACKUP_V1_PASSWORD, TEST_KDF, engine);
+    const json = JSON.stringify({
+      format: 'sillon-backup',
+      version: 1,
       createdAt: 1_700_000_000_000,
       schemaVersion: 2,
       username: 'camille',
       settings: { lockDelayMin: 5 },
-      notes: [
-        { id: 'a', title: 'Voyage à Lisbonne', body: FAKE_NOTES.voyage.body, parentId: null, pinned: true, createdAt: 1, updatedAt: 2, deletedAt: null, archivedAt: null },
-        { id: 'b', title: 'Jardin', body: FAKE_NOTES.jardin.body, parentId: 'a', pinned: false, createdAt: 3, updatedAt: 4, deletedAt: null, archivedAt: 5 },
-      ],
+      notes: FROZEN_NOTES,
     });
-    expect(toBase64(encryptWithKey(json, key, fixed))).toBe(BACKUP_V1_FILE);
+    expect(toBase64(encryptWithKey(json, key, engine))).toBe(BACKUP_V1_FILE);
+  });
+
+  it('restaure une sauvegarde de version 1 : les notes reçoivent le compte et l’appareil du téléphone', async () => {
+    const opened = openBackup(fromBase64(BACKUP_V1_FILE)!, BACKUP_V1_PASSWORD, nobleEngine);
+    if (!opened.ok) throw new Error('sauvegarde de version 1 illisible');
+    const target = await freshRepo();
+    await target.replaceAll(opened.content.notes);
+    expect(await target.adoptUnowned()).toBe(2);
+    const notes = await target.exportAll();
+    expect(notes.map((n) => [n.authorId, n.deviceId])).toEqual([
+      [AUTHOR, 'telephone-a'],
+      [AUTHOR, 'telephone-a'],
+    ]);
+    expect(notes.map((n) => n.updatedAt)).toEqual([2, 4]); // dates de modification intactes
+  });
+});
+
+describe('format version 2 figé', () => {
+  function v2Payload() {
+    return buildPayload({
+      createdAt: 1_700_000_000_000,
+      schemaVersion: 3,
+      username: 'camille',
+      authorId: 'auteur-fictif-1',
+      settings: { lockDelayMin: 5 },
+      notes: FROZEN_NOTES.map((n, i) => ({ ...n, authorId: 'auteur-fictif-1', deviceId: `appareil-fictif-${i + 1}` })),
+    });
+  }
+
+  it('relit un fichier de version 2 fabriqué une fois pour toutes', () => {
+    const opened = openBackup(fromBase64(BACKUP_V2_FILE)!, BACKUP_V2_PASSWORD, nobleEngine);
+    expect(opened.ok).toBe(true);
+    if (!opened.ok) return;
+    expect(opened.content.version).toBe(2);
+    expect(opened.content.authorId).toBe('auteur-fictif-1');
+    expect(opened.content.notes.map((n) => [n.title, n.authorId, n.deviceId])).toEqual([
+      ['Voyage à Lisbonne', 'auteur-fictif-1', 'appareil-fictif-1'],
+      ['Jardin', 'auteur-fictif-1', 'appareil-fictif-2'],
+    ]);
+  });
+
+  it('produit toujours les mêmes octets pour les mêmes entrées', () => {
+    const engine = fixedEngine();
+    const key = createBackupKey(BACKUP_V2_PASSWORD, TEST_KDF, engine);
+    expect(toBase64(encryptWithKey(v2Payload(), key, engine))).toBe(BACKUP_V2_FILE);
   });
 });
 
@@ -184,18 +258,22 @@ describe('contenu de la sauvegarde', () => {
     expect(parsePayload('pas du json')).toEqual({ ok: false, problem: 'not-backup' });
     expect(parsePayload('{"format":"autre"}')).toEqual({ ok: false, problem: 'not-backup' });
     expect(parsePayload('{"format":"sillon-backup","version":99}')).toEqual({ ok: false, problem: 'unknown-version' });
-    const base = { createdAt: 1, schemaVersion: 2, username: 'x', settings: { lockDelayMin: 5 } };
-    const note = { id: 'a', title: '', body: '', parentId: null, pinned: false, createdAt: 1, updatedAt: 1, deletedAt: null, archivedAt: null };
+    const base = { createdAt: 1, schemaVersion: 3, username: 'x', authorId: 'u', settings: { lockDelayMin: 5 } };
+    const note = { id: 'a', title: '', body: '', parentId: null, pinned: false, createdAt: 1, updatedAt: 1, deletedAt: null, archivedAt: null, authorId: 'u', deviceId: 'd' };
     expect(parsePayload(buildPayload({ ...base, notes: [note, note] }))).toEqual({ ok: false, problem: 'invalid' });
     expect(parsePayload(buildPayload({ ...base, notes: [{ ...note, pinned: 1 } as never] }))).toEqual({
       ok: false,
       problem: 'invalid',
     });
+    // Version 2 : une note sans auteur ni appareil est incohérente.
+    const { authorId: _a, deviceId: _d, ...withoutIds } = note;
+    expect(parsePayload(buildPayload({ ...base, notes: [withoutIds as never] }))).toEqual({ ok: false, problem: 'invalid' });
+    expect(parsePayload('{"format":"sillon-backup","version":3}')).toEqual({ ok: false, problem: 'unknown-version' });
   });
 
   it('remet à la racine une note dont la parente manque', () => {
-    const base = { createdAt: 1, schemaVersion: 2, username: 'x', settings: { lockDelayMin: 5 } };
-    const note = { id: 'a', title: '', body: '', parentId: 'disparue', pinned: false, createdAt: 1, updatedAt: 1, deletedAt: null, archivedAt: null };
+    const base = { createdAt: 1, schemaVersion: 3, username: 'x', authorId: 'u', settings: { lockDelayMin: 5 } };
+    const note = { id: 'a', title: '', body: '', parentId: 'disparue', pinned: false, createdAt: 1, updatedAt: 1, deletedAt: null, archivedAt: null, authorId: 'u', deviceId: 'd' };
     const parsed = parsePayload(buildPayload({ ...base, notes: [note] }));
     expect(parsed.ok && parsed.content.notes[0].parentId).toBeNull();
   });

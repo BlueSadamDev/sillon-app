@@ -4,6 +4,7 @@ import { randombytes_buf } from 'react-native-libsodium';
 
 import { uuidFromBytes } from '@/notes/id';
 
+import { noteIdentity } from './identity';
 import { createNotesRepo, type NotesRepo } from './notesRepo';
 import { migrate } from './schema';
 import type { Db } from './types';
@@ -31,7 +32,11 @@ export function openNotes(): Promise<NotesRepo> {
     await sqlite.execAsync('PRAGMA journal_mode = WAL');
     const db = wrap(sqlite);
     await migrate(db);
-    const repo = createNotesRepo(db, { now: () => Date.now(), newId: () => uuidFromBytes(randombytes_buf(16)) });
+    const repo = createNotesRepo(db, {
+      now: () => Date.now(),
+      newId: () => uuidFromBytes(randombytes_buf(16)),
+      identity: noteIdentity,
+    });
     // Les notes restées plus de 30 jours dans la corbeille sont effacées à l'ouverture.
     await repo.purgeTrash();
     return repo;

@@ -34,6 +34,12 @@ const MIGRATIONS: string[] = [
   `
   ALTER TABLE notes ADD COLUMN archived_at INTEGER;
   `,
+  // Version 3 : préparation au partage (auteur et appareil de la dernière modification).
+  // Les notes existantes reçoivent le compte et l'appareil du téléphone à l'ouverture (adoptUnowned).
+  `
+  ALTER TABLE notes ADD COLUMN author_id TEXT;
+  ALTER TABLE notes ADD COLUMN device_id TEXT;
+  `,
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;

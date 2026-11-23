@@ -80,6 +80,7 @@ export async function runBackup(auto: boolean): Promise<RunOutcome> {
         createdAt: now.getTime(),
         schemaVersion: SCHEMA_VERSION,
         username: account?.username ?? '',
+        authorId: account?.authorId || null,
         settings: { lockDelayMin: account?.lockDelayMin ?? DEFAULT_LOCK_DELAY_MIN },
         notes,
       });

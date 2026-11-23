@@ -17,6 +17,8 @@ function note(id: string, title: string, extra: Partial<Note> = {}): Note {
     updatedAt: 1_700_000_000_000,
     deletedAt: null,
     archivedAt: null,
+    authorId: null,
+    deviceId: null,
     ...extra,
   };
 }

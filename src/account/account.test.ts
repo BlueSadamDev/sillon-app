@@ -4,7 +4,8 @@ import { createHash } from 'crypto';
 import { fromHex, hashPassword, sameBytes, toHex, verifyPassword, type Kdf } from './password';
 import { checkNewAccount, checkNewPassword, shouldLock } from './rules';
 import { PASSWORD_KDF } from './settings';
-import { parseAccount } from './store';
+import { loadDeviceId, withAuthorId } from './identity';
+import { parseAccount, type SecretStore } from './store';
 
 // Argon2id simulé (le vrai calcul est natif) : même forme d'entrée et de sortie.
 const fakeKdf: Kdf = (password, salt, ops, mem, bytes) =>
@@ -56,8 +57,35 @@ describe('lecture du compte', () => {
   it('relit un compte enregistré et ignore une donnée abîmée', () => {
     const password = hashPassword('mot-de-passe-fictif', fakeKdf, SALT);
     const saved = JSON.stringify({ username: 'Camille', password, biometrics: true });
-    expect(parseAccount(saved)).toEqual({ username: 'Camille', password, biometrics: true, lockDelayMin: 5 });
+    expect(parseAccount(saved)).toEqual({ username: 'Camille', password, biometrics: true, lockDelayMin: 5, authorId: '' });
+    expect(parseAccount(JSON.stringify({ username: 'Camille', password, authorId: 'auteur-1' }))?.authorId).toBe('auteur-1');
     expect(parseAccount('{abîmé')).toBeNull();
     expect(parseAccount(null)).toBeNull();
+  });
+});
+
+describe('identifiants du partage futur', () => {
+  const ids = () => {
+    let n = 0;
+    return () => `id-${++n}`;
+  };
+
+  it('donne un identifiant d’auteur à un compte d’avant, une seule fois', () => {
+    const old = parseAccount(JSON.stringify({ username: 'Camille', password: hashPassword('mot-de-passe-fictif', fakeKdf, SALT) }))!;
+    const first = withAuthorId(old, ids());
+    expect(first).toMatchObject({ changed: true, account: { authorId: 'id-1' } });
+    expect(withAuthorId(first.account, ids())).toEqual({ account: first.account, changed: false });
+  });
+
+  it('crée l’identifiant de l’appareil une fois, puis le garde', async () => {
+    const data = new Map<string, string>();
+    const store: SecretStore = {
+      get: async (k) => data.get(k) ?? null,
+      set: async (k, v) => void data.set(k, v),
+      remove: async (k) => void data.delete(k),
+    };
+    const newId = ids();
+    expect(await loadDeviceId(store, newId)).toBe('id-1');
+    expect(await loadDeviceId(store, newId)).toBe('id-1');
   });
 });
