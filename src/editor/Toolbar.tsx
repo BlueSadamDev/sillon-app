@@ -1,5 +1,5 @@
-// Barre d'outils Markdown (DESIGN.md) : boutons 44 × 44 transparents, et à droite le bouton
-// principal « Lire » / « Écrire ». Fond surface, bordure haute line.
+// Barre d'outils Markdown du mode écriture (DESIGN.md) : boutons 44 × 44 transparents, et à droite
+// le bouton principal « Enregistrer », à portée de pouce (lot 1.1). Fond surface, bordure haute line.
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
 
@@ -38,29 +38,25 @@ function Glyph({ action }: { action: Action }) {
 
 const ACTIONS: Action[] = ['heading', 'bold', 'italic', 'list', 'task', 'link'];
 
-type Props = { mode: 'write' | 'read'; onAction: (a: Action) => void; onToggle: () => void; bottom: number };
+type Props = { onAction: (a: Action) => void; onSave: () => void; bottom: number };
 
-export function Toolbar({ mode, onAction, onToggle, bottom }: Props) {
+export function Toolbar({ onAction, onSave, bottom }: Props) {
   return (
     <View style={[styles.bar, { paddingBottom: bottom }]}>
-      {mode === 'write' ? (
-        <ScrollView horizontal keyboardShouldPersistTaps="always" showsHorizontalScrollIndicator={false} style={styles.tools}>
-          {ACTIONS.map((a) => (
-            <Pressable
-              key={a}
-              accessibilityRole="button"
-              accessibilityLabel={t.note.tools[a]}
-              onPress={() => onAction(a)}
-              style={({ pressed }) => [styles.tool, pressed && styles.pressed]}>
-              <Glyph action={a} />
-            </Pressable>
-          ))}
-        </ScrollView>
-      ) : (
-        <View style={styles.tools} />
-      )}
-      <Pressable accessibilityRole="button" onPress={onToggle} style={({ pressed }) => [styles.toggle, pressed && styles.dim]}>
-        <Text style={styles.toggleText}>{mode === 'write' ? t.note.read : t.note.write}</Text>
+      <ScrollView horizontal keyboardShouldPersistTaps="always" showsHorizontalScrollIndicator={false} style={styles.tools}>
+        {ACTIONS.map((a) => (
+          <Pressable
+            key={a}
+            accessibilityRole="button"
+            accessibilityLabel={t.note.tools[a]}
+            onPress={() => onAction(a)}
+            style={({ pressed }) => [styles.tool, pressed && styles.pressed]}>
+            <Glyph action={a} />
+          </Pressable>
+        ))}
+      </ScrollView>
+      <Pressable accessibilityRole="button" onPress={onSave} style={({ pressed }) => [styles.save, pressed && styles.dim]}>
+        <Text style={styles.saveText}>{t.note.save}</Text>
       </Pressable>
     </View>
   );
@@ -81,7 +77,7 @@ const styles = StyleSheet.create({
   pressed: { backgroundColor: colors.surfaceAlt },
   letter: { fontSize: 17, color: colors.ink },
   italic: { fontStyle: 'italic' },
-  toggle: {
+  save: {
     minHeight: TOUCH,
     paddingHorizontal: 18,
     marginVertical: 4,
@@ -91,6 +87,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  toggleText: { ...font('bold'), fontSize: 15, color: colors.onAccent },
+  saveText: { ...font('bold'), fontSize: 15, color: colors.onAccent },
   dim: { opacity: 0.7 },
 });
