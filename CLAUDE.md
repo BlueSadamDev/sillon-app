@@ -27,6 +27,7 @@
 - Ne jamais mettre de vraies notes dans le dépôt (dépôt **public**) : ni exports, ni captures, ni logs. Les tests utilisent uniquement des **notes fictives** (`src/**/__fixtures__/`).
 - Ne jamais afficher le contenu des notes ni un mot de passe dans les logs (`console.log`).
 - Un export **en clair** n'a lieu que sur demande explicite de l'utilisateur, avec un avertissement.
+- **Sauvegarde automatique d'Android désactivée** : `android.allowBackup` reste à `false` dans `app.json` (sinon Android peut copier la base, notes comprises, vers le compte Google, sans passer par la permission Internet). Le workflow de production vérifie l'APK final.
 
 ## Compte local
 - Un seul compte, créé au premier lancement, **stocké sur le téléphone**. Le mot de passe n'est conservé que sous forme d'empreinte (Argon2id ou scrypt), dans `expo-secure-store`.
