@@ -1,7 +1,8 @@
 # Cahier des charges – Sillon
 
 Nom de l'app : **Sillon** (application de notes personnelle avec IA locale).
-Version : 0.8 (24 novembre 2026). Changements par rapport à la 0.7 : accès au dossier pCloud déclaré perdu seulement après plusieurs essais espacés (F7), choix du lot 2.1 pour le partage simple (F10).
+Version : 0.9 (24 novembre 2026). Changements par rapport à la 0.8 : synchronisation entre le téléphone et une tablette Android par un relais sur le mini PC via Tailscale (lots 7.0, 7 et 7.1), collaboration à plusieurs (lot 8), d'après `docs/ETUDE_SYNCHRONISATION.md`.
+Version 0.8 (24 novembre 2026). Changements par rapport à la 0.7 : accès au dossier pCloud déclaré perdu seulement après plusieurs essais espacés (F7), choix du lot 2.1 pour le partage simple (F10).
 Version 0.7 (24 novembre 2026). Changements par rapport à la 0.6 : auteur et appareil précisés (3.1), vérifications pCloud du lot 2 (section 8).
 Version 0.6 (23 novembre 2026). Changements par rapport à la 0.5 : retours du premier usage (lot 1.1 : cases à cocher dans les deux modes, copie du texte, bouton « + », brouillon de la capture, boutons « Lire » et « Enregistrer » intervertis), dictée vocale locale (F11, lot 6), partage simple d'une note (F10, lot 2.1), préparation des données au partage et à la collaboration (3.1), feuille de route du partage à long terme (section 7, « Plus tard »).
 Version 0.5 (22 novembre 2026). Changements par rapport à la 0.4 : feuille de route complétée par la remise en forme des notes (F8, lot 4.1) et les actions (F9, lot 5).
@@ -15,6 +16,7 @@ Version 0.4 (22 novembre 2026). Changements par rapport à la 0.3 (décisions du
 - Usage strictement personnel : pas de Play Store, pas de serveur, pas de compte en ligne.
 - Projet conduit comme Aube : cahier des charges, puis design, puis lots. Le code est écrit par Claude à partir des règles du CLAUDE.md.
 - Évolution possible plus tard (hors périmètre) : version sur ordinateur avec synchronisation. L'architecture ne doit pas l'empêcher, mais rien n'est construit pour elle.
+- **À partir du lot 7** : synchronisation entre le téléphone et une **tablette Android**, par un **relais** sur le mini PC de la maison joint par Tailscale. Le relais ne voit jamais le contenu (chiffrement de bout en bout) et Sillon reste utilisable sans lui. Les règles « un seul téléphone », « pas de serveur » et « pas de permission Internet » évoluent à ce moment-là, selon `docs/ETUDE_SYNCHRONISATION.md` (section 3). D'ici là, elles restent en vigueur.
 
 ## 2. Architecture
 
@@ -23,8 +25,9 @@ Version 0.4 (22 novembre 2026). Changements par rapport à la 0.3 (décisions du
 | App Android | Saisie, lecture, recherche, IA, sauvegarde | Expo (React Native, TypeScript), SQLite local, rendu Markdown par react-native-marked, APK construit par GitHub Actions |
 | IA locale | Embeddings (recherche par le sens) et rédaction des insights | llama.rn ; modèle de rédaction LFM2.5 1.2B (validé sur Aube) ; modèle d'embeddings EmbeddingGemma 300M QAT Q8_0 (313 Mo, choisi au lot 0) |
 | Sauvegarde | Copie chiffrée hors du téléphone | Fichier chiffré par l'app, écrit dans un **dossier pCloud choisi une fois** via le sélecteur de dossiers d'Android (l'app pCloud joue le rôle de « fournisseur de fichiers ») ; chiffrement par react-native-libsodium |
+| Synchronisation (lot 7) | Mêmes notes sur le téléphone et la tablette | Relais Node.js sur le mini PC (Minisforum Z83-F, Debian recommandé), joint uniquement par Tailscale ; notes en documents Yjs, messages chiffrés (XChaCha20-Poly1305) et signés (Ed25519) par les appareils ; voir `docs/ETUDE_SYNCHRONISATION.md` |
 
-L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier dans le dossier pCloud, c'est l'app pCloud qui l'envoie dans le cloud.
+L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier dans le dossier pCloud, c'est l'app pCloud qui l'envoie dans le cloud. À partir du lot 7, la permission Internet est ajoutée, **limitée au module de synchronisation et à l'adresse Tailscale du relais** (étude, section 3).
 
 ## 3. Données
 
@@ -175,18 +178,13 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
   - 5b : actions implicites proposées par l'IA, validées une par une ;
   - 5c : vue « Ma semaine ».
 - **Lot 6 – Dictée vocale locale** (F11) : d'abord un banc d'essai (taille et vitesse des modèles Whisper sur le S21, qualité en français, cohabitation avec le modèle de rédaction en mémoire), puis le bouton micro dans la capture et l'éditeur.
-- **Plus tard** : bases de données façon Notion, import de PDF, version sur ordinateur avec synchronisation.
-- **Plus tard – partage et collaboration**, par niveaux (chaque niveau demande son propre cahier des charges et une phase de faisabilité) :
-  - **Partage à jour en lecture, par dossier pCloud partagé** (sans serveur) : Sillon dépose la note chiffrée dans un dossier pCloud partagé, la Sillon de l'invité la lit. Demande : Sillon et pCloud chez l'invité, une clé par note partagée transmise à l'invité, une mise à jour non instantanée.
-  - **Collaboration (plusieurs personnes modifient la même note)** : change les règles de base de Sillon. Conditions :
-    - un **serveur relais** (le mini PC suffit pour quelques personnes), joint par Tailscale de préférence (invités ajoutés au réseau, rien d'ouvert sur Internet) ;
-    - la **permission Internet**, limitée à un seul module de synchronisation ;
-    - de **vrais comptes** : une identité et une paire de clés par personne ;
-    - **chiffrement de bout en bout** : une clé par note partagée, remise aux seuls invités ; le serveur ne voit jamais le contenu ;
-    - **fusion automatique des modifications** (structure de type CRDT : Yjs ou Automerge) à la place des copies de conflit ; c'est le changement le plus lourd, il touche au stockage des notes ;
-    - **droits** (lecture, écriture, retrait d'un invité) et historique des modifications par auteur ;
-    - **règle IA** : les notes des autres n'entrent pas dans les insights sans leur accord ;
-    - **données personnelles** : héberger les notes d'autres personnes fait de l'utilisateur le responsable de ces données ; à cadrer avant d'ouvrir le partage.
+- **Lot 7.0 – Faisabilité de la synchronisation** (étude, section 14) : relais prototype sur le Z83-F via Tailscale, Yjs et branchement de l'éditeur, fonctions libsodium (signatures, boîtes scellées), appairage par QR code, tâche de fond et batterie. Rapport dans `docs/RAPPORT_LOT_7_0.md`.
+- **Lot 7 – Duo téléphone et tablette** : installation du relais, clé de coffre, appairage par QR code et quatre mots de vérification, clé de secours, écran « Mes appareils » (retrait, effacement à distance), migration des notes vers Yjs, synchronisation, historique des versions, test `networkGuard`, banc de chaos, sauvegarde depuis l'appareil désigné.
+- **Lot 7.1 – Écran tablette** : affichage en deux colonnes (liste à gauche, note à droite).
+- **Lot 8 – Collaboration** (étude, section 11) : identités, espaces partagés avec leur propre clé, invitations, droits lecture / écriture appliqués par signature, présence, commentaires, règle IA, cadrage des données personnelles. Complément au cahier des charges à écrire avant le lot.
+- **Ordre proposé** : lots 7.0 et 7 juste après le lot 3, avant les lots 4, 4.1 et 5 (décision à confirmer, étude section 13).
+- **Plus tard** : bases de données façon Notion, import de PDF, version sur ordinateur (elle se brancherait sur le relais du lot 7), appareil « jardinier » qui calcule l'IA pour les autres.
+- **Partage et collaboration** : remplacés par les lots 7 et 8 ci-dessus. L'option « dossier pCloud partagé » est abandonnée au profit du relais (étude, section 1).
 
 ## 8. Points ouverts et risques
 
@@ -200,7 +198,7 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 - **Actions implicites (F9, 5b)** : risque d'actions inventées ou en double. Parades : phrase d'origine obligatoire, validation une par une, filtre des doublons. Pour une page avec beaucoup de sous-notes, le traitement note par note est plus lent : à mesurer.
 - **Dates écrites en français** (F9, 5a) : « vendredi » ou « fin du mois » demandent des règles claires (vendredi = le prochain à venir). Les règles retenues seront écrites dans le cahier au lot 5a.
 - **Partage simple (F10)** : un PDF ou un fichier partagé sort du contrôle de Sillon (copie en clair chez le destinataire et dans l'app utilisée). Le menu de partage le rappelle en une phrase.
-- **Collaboration (long terme)** : passer d'une note en Markdown simple à une structure de fusion automatique demandera une migration des notes existantes. La préparation de la section 3.1 la rend plus simple, pas gratuite.
+- **Synchronisation et collaboration (lots 7 et 8)** : risques détaillés dans `docs/ETUDE_SYNCHRONISATION.md` (sections 8 et 12) : branchement de l'éditeur sur Yjs, migration des notes existantes, disponibilité du relais, dépendance à Tailscale, emplacement VPN d'Android, batterie, défaut de synchronisation qui se propagerait (parades : historique des versions, sauvegarde pCloud indépendante, banc de chaos).
 - **Copie en mode lecture (lot 1.1)** : l'affichage Markdown ne permet de sélectionner qu'un paragraphe à la fois. « Copier tout le texte » compense ; une sélection sur plusieurs paragraphes demanderait de changer de bibliothèque de rendu.
 - **Dictée locale (F11)** : un modèle Whisper assez bon en français pèse plusieurs centaines de Mo et peut être lent sur le S21 ; à mesurer au banc d'essai du lot 6. Repli : petit modèle plus rapide, ou dictée Gboard hors connexion.
 - **Changement de téléphone** (par exemple un Pixel 8 Pro) : refaire les mesures de l'IA.

@@ -67,6 +67,7 @@
 - **Lot 3** : recherche par le sens et notes liées.
 - **Lot 4** : insights (résumés, tags proposés, questions, bilan de la semaine).
 - **Suite** (cahier des charges, section 7) : lot 1.1 (confort d'écriture, juste après la fusion du lot 2), lot 2.1 (partage simple), lot 4.1 (remise en forme), lot 5 (actions), lot 6 (dictée vocale locale, avec un banc d'essai d'abord).
+- **Synchronisation et collaboration** (lots 7.0, 7, 7.1 et 8) : conception dans `docs/ETUDE_SYNCHRONISATION.md`. Ses règles (relais sur le mini PC, permission Internet limitée à `src/sync/`, clés, Yjs) n'entrent en vigueur qu'au début du lot 7 : ce fichier sera alors mis à jour. D'ici là, les règles « pas de serveur » et « pas de permission Internet » s'appliquent sans exception.
 
 ## Design
 Lire [DESIGN.md](DESIGN.md) avant toute modification d'interface et le respecter. Tant que DESIGN.md n'existe pas (lot 0), garder une interface minimale et lisible, sans travail graphique.
