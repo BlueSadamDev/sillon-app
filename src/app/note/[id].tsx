@@ -18,7 +18,9 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useSemantic } from '@/ai/SemanticProvider';
 import { BackIcon, MoreIcon } from '@/components/icons';
+import { RelatedNotes } from '@/components/RelatedNotes';
 import { Sheet, SheetItem } from '@/components/Sheet';
 import { useToast } from '@/components/Toast';
 import { notesChanged } from '@/db/events';
@@ -44,6 +46,7 @@ export default function NoteScreen() {
   const toast = useToast();
   const insets = useSafeAreaInsets();
   const keyboard = useKeyboardVisible();
+  const { noteSaved } = useSemantic();
 
   const [loaded, setLoaded] = useState(false);
   const [draft, setDraft] = useState<Draft>({ title: '', body: '' });
@@ -94,7 +97,8 @@ export default function NoteScreen() {
     saved.current = d;
     await (await openNotes()).update(id, d);
     setUpdatedAt(Date.now());
-  }, [id]);
+    noteSaved();
+  }, [id, noteSaved]);
 
   // Enregistrement automatique, peu après la dernière frappe.
   useEffect(() => {
@@ -335,7 +339,13 @@ export default function NoteScreen() {
             </View>
           ) : (
             <View style={styles.fill}>
-              <MarkdownView value={draft.body} onNoteLink={onNoteLink} onToggleTask={onToggleTask} header={header} />
+              <MarkdownView
+                value={draft.body}
+                onNoteLink={onNoteLink}
+                onToggleTask={onToggleTask}
+                header={header}
+                footer={<RelatedNotes noteId={id} />}
+              />
             </View>
           )}
           {mode === 'write' ? (

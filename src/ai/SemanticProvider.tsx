@@ -50,6 +50,8 @@ type SemanticState = {
   removeModel(): Promise<void>;
   /** Change à chaque nouveau vecteur : les écrans ouverts relisent leurs résultats. */
   version: number;
+  /** Une note vient d'être enregistrée : son vecteur sera calculé peu après. */
+  noteSaved(): void;
   related(noteId: string): Promise<SemanticAnswer>;
   search(query: string, alreadyFound: string[]): Promise<SemanticAnswer>;
 };
@@ -76,6 +78,7 @@ export function SemanticProvider({ children }: { children: ReactNode }) {
   const indexer = useRef<Indexer | null>(null);
   const engine = useRef<ReturnType<typeof createLazyEngine> | null>(null);
   const cache = useRef<Promise<StoredVector[]> | null>(null);
+  const scheduleRef = useRef<() => void>(() => undefined);
 
   // Réglage du seuil, à l'ouverture.
   useEffect(() => {
@@ -123,6 +126,7 @@ export function SemanticProvider({ children }: { children: ReactNode }) {
       }, INDEXING.debounceMs);
     };
 
+    scheduleRef.current = schedule;
     void start();
     const offNotes = onNotesChanged(schedule);
     const appState = AppState.addEventListener('change', (s) => {
@@ -131,6 +135,7 @@ export function SemanticProvider({ children }: { children: ReactNode }) {
     });
     return () => {
       alive = false;
+      scheduleRef.current = () => undefined;
       if (debounce) clearTimeout(debounce);
       offNotes();
       appState.remove();
@@ -171,6 +176,8 @@ export function SemanticProvider({ children }: { children: ReactNode }) {
     [modelUri, loadAll, threshold],
   );
 
+  const noteSaved = useCallback(() => scheduleRef.current(), []);
+
   const setLevel = useCallback((next: ProximityLevel) => {
     setLevelState(next);
     void openVectors().then((v) => v.setLocalSetting(LEVEL_KEY, next));
@@ -202,10 +209,11 @@ export function SemanticProvider({ children }: { children: ReactNode }) {
       importModel,
       removeModel,
       version,
+      noteSaved,
       related,
       search,
     }),
-    [modelStatus, modelSizeBytes, progress, failed, level, setLevel, importModel, removeModel, version, related, search],
+    [modelStatus, modelSizeBytes, progress, failed, level, setLevel, importModel, removeModel, version, noteSaved, related, search],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

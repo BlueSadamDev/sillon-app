@@ -18,6 +18,8 @@ type Props = {
   onToggleTask?: (line: number) => void;
   /** Contenu affiché au-dessus du texte (titre, tags), dans la même zone qui défile. */
   header?: ReactElement;
+  /** Affiché sous le texte (bloc « Notes liées », lot 3). */
+  footer?: ReactElement;
 };
 
 /** Case à cocher du mode lecture : 18 px en couleur d'accent, zone tactile de 44 × 44 px (DESIGN.md). */
@@ -102,7 +104,7 @@ class SillonRenderer extends Renderer implements RendererInterface {
   }
 }
 
-export function MarkdownView({ value, onNoteLink, onToggleTask, header }: Props) {
+export function MarkdownView({ value, onNoteLink, onToggleTask, header, footer }: Props) {
   const renderer = useMemo(() => new SillonRenderer(onNoteLink, onToggleTask), [onNoteLink, onToggleTask]);
   const prepared = useMemo(() => prepareMarkdown(value), [value]);
   return (
@@ -113,6 +115,7 @@ export function MarkdownView({ value, onNoteLink, onToggleTask, header }: Props)
       theme={{ colors: { text: colors.ink, link: colors.accentText, border: colors.line, code: colors.surface } }}
       flatListProps={{
         ListHeaderComponent: header,
+        ListFooterComponent: footer,
         contentContainerStyle: md.container,
         style: md.list,
         keyboardShouldPersistTaps: 'handled',
