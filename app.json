@@ -10,6 +10,7 @@
     "backgroundColor": "#F5F1E8",
     "android": {
       "package": "com.bluesadamdev.sillon",
+      "allowBackup": false,
       "adaptiveIcon": {
         "backgroundColor": "#F5F1E8",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
