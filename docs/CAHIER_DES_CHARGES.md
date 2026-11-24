@@ -1,7 +1,8 @@
 # Cahier des charges – Sillon
 
 Nom de l'app : **Sillon** (application de notes personnelle avec IA locale).
-Version : 0.7 (24 novembre 2026). Changements par rapport à la 0.6 : auteur et appareil précisés (3.1), vérifications pCloud du lot 2 (section 8).
+Version : 0.8 (24 novembre 2026). Changements par rapport à la 0.7 : accès au dossier pCloud déclaré perdu seulement après plusieurs essais espacés (F7), choix du lot 2.1 pour le partage simple (F10).
+Version 0.7 (24 novembre 2026). Changements par rapport à la 0.6 : auteur et appareil précisés (3.1), vérifications pCloud du lot 2 (section 8).
 Version 0.6 (23 novembre 2026). Changements par rapport à la 0.5 : retours du premier usage (lot 1.1 : cases à cocher dans les deux modes, copie du texte, bouton « + », brouillon de la capture, boutons « Lire » et « Enregistrer » intervertis), dictée vocale locale (F11, lot 6), partage simple d'une note (F10, lot 2.1), préparation des données au partage et à la collaboration (3.1), feuille de route du partage à long terme (section 7, « Plus tard »).
 Version 0.5 (22 novembre 2026). Changements par rapport à la 0.4 : feuille de route complétée par la remise en forme des notes (F8, lot 4.1) et les actions (F9, lot 5).
 Version 0.4 (22 novembre 2026). Changements par rapport à la 0.3 (décisions du lot 1) : archive des notes, glissement sur l'accueil (corbeille, archive), bouton « Enregistrer » dans l'éditeur, carte d'insight au-dessus de la capture rapide, règle de la capture rapide, tags écrits `#mot`, export en clair reporté au lot 2.
@@ -100,7 +101,7 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 - **Rotation** : garder les 10 dernières sauvegardes datées dans le dossier, supprimer les plus anciennes. Une suppression refusée par pCloud est retentée à la sauvegarde suivante.
 - **Une action à la fois** dans le dossier pCloud, espacées de quelques secondes ; après chaque action, l'app relit la liste du dossier pour vérifier ce qui a vraiment été fait (pCloud signale parfois une erreur sur une action réussie).
 - **Restauration** : choisir un fichier, saisir le mot de passe, aperçu (date, nombre de notes), confirmation, remplacement des données.
-- **En cas d'échec** (dossier inaccessible, app pCloud déconnectée, permission perdue) : message clair sur l'accueil et dans Compte, avec le bouton pour rechoisir le dossier.
+- **En cas d'échec** (dossier inaccessible, app pCloud déconnectée, permission perdue) : message clair sur l'accueil et dans Compte, avec le bouton pour rechoisir le dossier. L'accès au dossier n'est déclaré perdu qu'après **plusieurs essais espacés** de quelques secondes (une seule réponse manquée de pCloud n'est pas une perte d'accès) ; les réglages sont dans `src/backup/settings.ts`.
 - **Solution de repli** si l'écriture directe dans pCloud ne marche pas : export du fichier chiffré puis partage vers l'app pCloud.
 
 ### F8 – Remise en forme d'une note (lot 4.1)
@@ -124,10 +125,12 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 ### F10 – Partage simple d'une note (lot 2.1)
 - Bouton **« Partager »** dans le menu « … » d'une note : ouvre le menu de partage d'Android (messagerie, mail, Drive…).
 - Trois formats au choix : **texte** (Markdown brut dans le message), **fichier Markdown** (`.md`), **PDF** (mise en forme du mode lecture, police Satoshi, sans les éléments d'interface).
-- Option « inclure les sous-notes » pour une page (un seul fichier, sous-notes à la suite, ou un ZIP de fichiers `.md`).
+- Option « inclure les sous-notes » pour une page : un seul message ou un seul fichier, sous-notes à la suite (ordre de Pages, toutes profondeurs), chacune sous son titre. Les sous-notes à la corbeille sont exclues, les archivées incluses. Pas de ZIP (choix du lot 2.1).
 - Le partage envoie une **copie** : les modifications suivantes ne sont pas transmises.
 - **Aucune permission Internet** : le partage passe par les autres apps du téléphone. Les liens `[[ ]]` vers des notes non partagées deviennent du texte simple ; les insights et notes liées ne sont jamais inclus.
-- Bibliothèques pressenties (à valider au début du lot) : `expo-sharing` et `expo-print` (PDF généré sur le téléphone).
+- Bibliothèques retenues (lot 2.1) : `expo-sharing` (menu de partage pour les fichiers ; le texte passe par le partage intégré à React Native) et `expo-print` (PDF A4 généré sur le téléphone, police Satoshi intégrée au fichier). Aucune n'ajoute la permission Internet.
+- **Tous** les liens `[[ ]]` deviennent du texte simple, même ceux vers une sous-note partagée en même temps. Le HTML écrit dans une note s'affiche comme du texte dans le PDF et les images y sont remplacées par leur légende : rien n'est chargé en ligne.
+- Les fichiers préparés restent dans l'espace temporaire privé de l'app ; ils sont effacés au partage suivant et à l'ouverture de l'app (l'app choisie peut les lire un peu après la fermeture du menu de partage).
 
 ### F11 – Dictée vocale locale (lot 6)
 - Bouton **micro** dans la capture rapide et dans la barre d'outils de l'éditeur : l'utilisateur parle, le texte s'écrit à l'endroit du curseur, il peut le corriger ensuite.
