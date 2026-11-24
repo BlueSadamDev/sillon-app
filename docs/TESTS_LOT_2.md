@@ -10,23 +10,23 @@ Avant de commencer : l'app pCloud est installée et connectée sur le téléphon
 
 Jour 1 :
 
-- [ ] **1. Sauvegarde manuelle.** Compte > Sauvegarde : configurer (dossier pCloud, mot de passe de sauvegarde
+- [x] **1. Sauvegarde manuelle.** Compte > Sauvegarde : configurer (dossier pCloud, mot de passe de sauvegarde
   deux fois) si ce n'est pas déjà fait, puis « Sauvegarder maintenant ».
   Attendu : « Sauvegardé. », la pastille passe à « À jour », et dans l'app pCloud un fichier
   `sillon-AAAAMMJJ-HHMMSS.bin` apparaît dans le dossier (taille plus grande que 0 après quelques secondes).
-- [ ] **2. Après un redémarrage.** Éteindre et rallumer le téléphone, ouvrir Sillon, puis
+- [x] **2. Après un redémarrage.** Éteindre et rallumer le téléphone, ouvrir Sillon, puis
   « Sauvegarder maintenant ».
   Attendu : aucun message « Sillon n'a plus accès… », un nouveau fichier dans pCloud.
-- [ ] **3. Rotation.** Toucher « Sauvegarder maintenant » encore 11 fois, **en attendant 30 secondes**
+- [x] **3. Rotation.** Toucher « Sauvegarder maintenant » encore 11 fois, **en attendant 30 secondes**
   entre deux (environ 6 minutes). Regarder ensuite le dossier dans pCloud.
   Attendu : **10 fichiers** `sillon-…` exactement, les plus anciens ont disparu. Noter si un message
   d'erreur s'est affiché pendant la série. (S'il en reste 11 ou 12 : une suppression a été refusée par
   pCloud ; faire encore une sauvegarde, il doit retomber à 10.)
-- [ ] **4. Export en clair.** Compte > Données > « Exporter mes notes en clair ».
+- [x] **4. Export en clair.** Compte > Données > « Exporter mes notes en clair ».
   Attendu : un avertissement d'abord ; choisir le dossier **Téléchargements** (surtout pas pCloud : le
   fichier n'est pas chiffré) ; message « Export enregistré… » ; le ZIP s'ouvre dans « Mes fichiers » avec
   une note par fichier `.md`. **Supprimer ce ZIP ensuite** : il n'est pas protégé.
-- [ ] **5. Accès perdu.** Dans l'app pCloud, se déconnecter du compte. Fermer Sillon complètement
+- [x] **5. Accès perdu.** Dans l'app pCloud, se déconnecter du compte. Fermer Sillon complètement
   (bouton des apps récentes, balayer Sillon), puis le rouvrir et le déverrouiller.
   Attendu : sur l'accueil et dans Compte, le message « Sillon n'a plus accès à ton dossier pCloud… » avec le
   bouton « Choisir le dossier à nouveau ». Se reconnecter dans pCloud, puis toucher ce bouton et rechoisir le

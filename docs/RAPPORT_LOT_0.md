@@ -3,7 +3,8 @@
 État au 22 novembre 2026 : **lot 0 terminé.** Chiffrement, Markdown et embeddings mesurés ; dossier
 pCloud jugé suffisant par l'utilisateur pour passer à la suite. Trois vérifications pCloud n'ont pas été
 faites au lot 0 et sont reportées au lot 2 : accès après redémarrage, suppressions espacées, relecture
-d'un fichier déjà envoyé.
+d'un fichier déjà envoyé. Les deux premières sont **confirmées au lot 2** (voir « Vérifications du lot 2 »
+à la fin de la section 1) ; la relecture d'un fichier déjà envoyé reste à faire.
 Toutes les mesures viennent du Samsung Galaxy S21 (8 Go), APK de production (sans permission Internet).
 Ce rapport ne contient que des mesures et des noms de bibliothèques, jamais de vraies notes : tous les
 essais utilisent des notes fictives (`src/**/__fixtures__/`).
@@ -35,15 +36,33 @@ Fichier d'essai : 256 Kio d'octets aléatoires.
 | Nom du fichier | gardé si l'extension correspond au type : avec `application/octet-stream`, pCloud ajoute « .bin » à un nom en « .sillon » ; un nom en « .bin » reste tel quel |
 | Liste du dossier, vrais noms, tailles, dates | **oui**, par `Directory.info().files` (les adresses, elles, portent un identifiant pCloud, `f113371187787`) |
 | Fichier juste écrit | taille 0 pendant l'envoi par pCloud ; il apparaît ensuite complet |
-| Relecture du fichier juste écrit | **non** pendant l'envoi (`FileNotFoundException`) ; relecture d'un fichier déjà envoyé reportée au lot 2 |
+| Relecture du fichier juste écrit | **non** pendant l'envoi (`FileNotFoundException`) ; relecture d'un fichier déjà envoyé : à faire (lot 2, test 7) |
 | Écritures rapprochées (moins de 30 s) | pCloud **crée le fichier complet mais renvoie une erreur** à l'app |
-| Suppression (rotation) | **1 sur 3** : la première réussit, les deux suivantes, lancées dans la même seconde, sont refusées (« Unable to delete ») ; suppressions espacées reportées au lot 2 |
-| Accès conservé après redémarrage du téléphone | non mesuré au lot 0 (reporté au lot 2) |
-| Message si la permission est retirée / app pCloud déconnectée | non mesuré au lot 0 (reporté au lot 2) |
+| Suppression (rotation) | **1 sur 3** : la première réussit, les deux suivantes, lancées dans la même seconde, sont refusées (« Unable to delete ») ; suppressions espacées : **oui** au lot 2 |
+| Accès conservé après redémarrage du téléphone | **oui** (lot 2) |
+| Message si la permission est retirée / app pCloud déconnectée | **oui** (lot 2, app pCloud déconnectée) |
 
 Constat : **l'écriture directe dans pCloud fonctionne**, ce qui est le point le plus risqué. L'app pCloud
 supporte mal plusieurs opérations à la suite : elle exécute l'opération puis signale parfois une erreur.
 Dans l'usage réel (une sauvegarde par jour, puis une seule suppression), les opérations sont espacées.
+
+### Vérifications du lot 2
+
+Samsung S21, APK de production du lot 2 (run GitHub 45237032195, sans permission Internet), novembre 2026.
+Sauvegardes réelles de l'app (chiffrées), pas de fichier d'essai. Liste des tests : `docs/TESTS_LOT_2.md`.
+
+| Vérification | Résultat |
+| --- | --- |
+| « Sauvegarder maintenant » : fichier `sillon-AAAAMMJJ-HHMMSS.bin` dans pCloud, pastille « À jour » | **oui** |
+| Accès au dossier après redémarrage du téléphone (sans rechoisir le dossier) | **oui** |
+| Rotation : 12 sauvegardes espacées d'environ 30 s (une écriture, puis une suppression 5 s plus tard, chacune vérifiée par la liste du dossier) | **oui** : 10 fichiers restants, sans message d'erreur |
+| App pCloud déconnectée : message « Sillon n'a plus accès… » sur l'accueil et dans Compte, puis retour à la normale après avoir rechoisi le dossier | **oui** |
+| Export en clair (ZIP, dossier Téléchargements, avec avertissement) | **oui** |
+| Sauvegarde automatique le lendemain (tâche de fond ou ouverture) | à faire |
+| Restauration d'un fichier déjà envoyé par pCloud (fichier de la veille) | à faire |
+
+Constat : avec une action à la fois et quelques secondes d'écart, pCloud accepte écritures et suppressions ;
+la permission persistante sur le dossier survit au redémarrage.
 
 ## 2. Chiffrement
 
