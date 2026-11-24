@@ -4,7 +4,7 @@ Application Android personnelle de prise de notes en Markdown. Une IA locale en 
 Tout se passe sur le téléphone : seule une sauvegarde chiffrée sort, dans un dossier pCloud.
 Référence : [docs/CAHIER_DES_CHARGES.md](docs/CAHIER_DES_CHARGES.md).
 
-## État actuel : lot 1.1 (confort d'écriture), testé
+## État actuel : lot 2.1 (partage simple), en test
 
 - Compte local créé au premier lancement (seule l'empreinte du mot de passe est gardée, dans le coffre
   sécurisé du téléphone), déverrouillage par empreinte digitale ou mot de passe, délai de verrouillage réglable.
@@ -13,6 +13,9 @@ Référence : [docs/CAHIER_DES_CHARGES.md](docs/CAHIER_DES_CHARGES.md).
 - Confort d'écriture (lot 1.1) : « Enregistrer » au-dessus du clavier, « Lire » / « Écrire » en haut ; cases à
   cocher touchables en mode lecture ; « Copier tout le texte » (menu « … ») ; « + » avec un champ vide ouvre
   une note vide ; le brouillon de la capture rapide est gardé.
+- Partage simple (lot 2.1) : menu « … » d'une note > « Partager », en texte, en fichier Markdown ou en
+  PDF (fabriqué sur le téléphone, police Satoshi), avec ou sans les sous-notes, par le menu de partage
+  d'Android. Aucune permission Internet. Tests sur le téléphone : [docs/TESTS_LOT_2_1.md](docs/TESTS_LOT_2_1.md).
 - Pages : arborescence des notes et sous-notes, corbeille de 30 jours.
 - Recherche par mots (sans accents, par début de mot).
 - Archives (glisser une note de l’accueil vers la gauche) et corbeille (vers la droite).
@@ -59,3 +62,5 @@ sauvegarde.
 ## Vérifications avant chaque build
 
 `npx expo-doctor`, `npx expo lint`, `npx tsc --noEmit`, `npx jest`.
+
+Si les polices de `assets/fonts/` changent : `node scripts/generate-pdf-fonts.js` (polices du PDF partagé).
