@@ -43,3 +43,11 @@ export function modifiedWhen(time: number, now: Date): string {
   if (short === 'Hier') return 'hier';
   return `le ${short}`;
 }
+
+/** Date complète d'une sauvegarde : « 23 novembre 2026 à 14:05 ». */
+export function dateAndTime(time: number): string {
+  const d = new Date(time);
+  const day = d.getDate() === 1 ? '1er' : String(d.getDate());
+  const hm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  return `${day}${NBSP}${MONTHS[d.getMonth()]} ${d.getFullYear()} à ${hm}`;
+}

@@ -1,4 +1,4 @@
-import { greeting, longDate, modifiedWhen, shortDate } from './dates';
+import { dateAndTime, greeting, longDate, modifiedWhen, shortDate } from './dates';
 
 const NOW = new Date(2026, 10, 22, 15, 30); // dimanche 22 novembre 2026, 15 h 30
 
@@ -21,5 +21,10 @@ describe('dates', () => {
   it('salue selon l’heure', () => {
     expect(greeting(NOW)).toBe('Bonjour');
     expect(greeting(new Date(2026, 10, 22, 19))).toBe('Bonsoir');
+  });
+
+  it('écrit la date complète d’une sauvegarde', () => {
+    expect(dateAndTime(new Date(2026, 10, 23, 14, 5).getTime())).toBe('23\u00a0novembre 2026 à 14:05');
+    expect(dateAndTime(new Date(2026, 0, 1, 9, 0).getTime())).toBe('1er\u00a0janvier 2026 à 09:00');
   });
 });

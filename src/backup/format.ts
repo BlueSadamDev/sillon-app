@@ -1,4 +1,6 @@
-// Format du fichier chiffré (prototype du lot 0, à figer au lot 2).
+// Format du fichier chiffré : version 1, figée au lot 2 (prototype du lot 0 repris tel quel).
+// Ne jamais modifier cette version : un changement de format = une nouvelle version, et l'app
+// doit continuer à relire les anciennes (test automatique dans restore.test.ts).
 //
 // En-tête (tout en clair, mais protégé : il sert de « donnée associée » au chiffrement,
 // donc toute modification fait échouer le déchiffrement) :

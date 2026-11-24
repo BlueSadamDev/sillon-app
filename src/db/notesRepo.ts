@@ -19,9 +19,12 @@ type Row = {
   updated_at: number;
   deleted_at: number | null;
   archived_at: number | null;
+  author_id: string | null;
+  device_id: string | null;
 };
 
-const COLUMNS = 'id, title, body, parent_id, pinned, created_at, updated_at, deleted_at, archived_at';
+const COLUMNS =
+  'id, title, body, parent_id, pinned, created_at, updated_at, deleted_at, archived_at, author_id, device_id';
 const ALIVE = 'deleted_at IS NULL';
 /** Hors corbeille et hors archives (accueil). */
 const ACTIVE = 'deleted_at IS NULL AND archived_at IS NULL';
@@ -37,13 +40,28 @@ function toNote(r: Row): Note {
     updatedAt: r.updated_at,
     deletedAt: r.deleted_at,
     archivedAt: r.archived_at,
+    authorId: r.author_id,
+    deviceId: r.device_id,
   };
 }
 
 export type NoteWithCount = Note & { childCount: number };
-export type Deps = { now: () => number; newId: () => string };
+/** Compte et appareil du téléphone, notés sur chaque note écrite (préparation au partage). */
+export type NoteIdentity = { authorId: string | null; deviceId: string | null };
 
-export function createNotesRepo(db: Db, { now, newId }: Deps) {
+export type Deps = {
+  now: () => number;
+  newId: () => string;
+  /** Lu à chaque écriture : le compte n'est connu qu'après son chargement. */
+  identity?: () => NoteIdentity;
+};
+
+const NO_IDENTITY: NoteIdentity = { authorId: null, deviceId: null };
+
+export function createNotesRepo(db: Db, { now, newId, identity = () => NO_IDENTITY }: Deps) {
+  /** Appareil de la dernière modification : noté à chaque écriture d'une note. */
+  const device = () => identity().deviceId;
+
   async function writeIndex(id: string, title: string, body: string): Promise<void> {
     await db.run('DELETE FROM notes_fts WHERE id = ?', [id]);
     await db.run('INSERT INTO notes_fts (id, title, body) VALUES (?, ?, ?)', [id, title, body]);
@@ -88,11 +106,13 @@ export function createNotesRepo(db: Db, { now, newId }: Deps) {
         updatedAt: t,
         deletedAt: null,
         archivedAt: null,
+        authorId: identity().authorId,
+        deviceId: device(),
       };
       await db.transaction(async () => {
         await db.run(
-          `INSERT INTO notes (${COLUMNS}) VALUES (?, ?, ?, ?, 0, ?, ?, NULL, NULL)`,
-          [note.id, note.title, note.body, note.parentId, t, t],
+          `INSERT INTO notes (${COLUMNS}) VALUES (?, ?, ?, ?, 0, ?, ?, NULL, NULL, ?, ?)`,
+          [note.id, note.title, note.body, note.parentId, t, t, note.authorId, note.deviceId],
         );
         await writeIndex(note.id, note.title, note.body);
       });
@@ -102,10 +122,11 @@ export function createNotesRepo(db: Db, { now, newId }: Deps) {
     /** Enregistrement automatique de l'éditeur : titre et contenu. */
     async update(id: string, changes: { title: string; body: string }): Promise<void> {
       await db.transaction(async () => {
-        await db.run('UPDATE notes SET title = ?, body = ?, updated_at = ? WHERE id = ?', [
+        await db.run('UPDATE notes SET title = ?, body = ?, updated_at = ?, device_id = ? WHERE id = ?', [
           changes.title,
           changes.body,
           now(),
+          device(),
           id,
         ]);
         await writeIndex(id, changes.title, changes.body);
@@ -113,13 +134,18 @@ export function createNotesRepo(db: Db, { now, newId }: Deps) {
     },
 
     async setPinned(id: string, pinned: boolean): Promise<void> {
-      await db.run('UPDATE notes SET pinned = ? WHERE id = ?', [pinned ? 1 : 0, id]);
+      await db.run('UPDATE notes SET pinned = ?, device_id = ? WHERE id = ?', [pinned ? 1 : 0, device(), id]);
     },
 
     /** Range une note dans une autre (ou à la racine). Refusé si cela créerait une boucle. */
     async move(id: string, newParentId: string | null): Promise<boolean> {
       if (!canMove(id, newParentId, await aliveTree())) return false;
-      await db.run('UPDATE notes SET parent_id = ?, updated_at = ? WHERE id = ?', [newParentId, now(), id]);
+      await db.run('UPDATE notes SET parent_id = ?, updated_at = ?, device_id = ? WHERE id = ?', [
+        newParentId,
+        now(),
+        device(),
+        id,
+      ]);
       return true;
     },
 
@@ -177,7 +203,9 @@ export function createNotesRepo(db: Db, { now, newId }: Deps) {
       const ids = [id, ...descendantIds(id, await aliveTree())];
       const t = now();
       await db.transaction(async () => {
-        for (const n of ids) await db.run(`UPDATE notes SET deleted_at = ? WHERE id = ? AND ${ALIVE}`, [t, n]);
+        for (const n of ids) {
+          await db.run(`UPDATE notes SET deleted_at = ?, device_id = ? WHERE id = ? AND ${ALIVE}`, [t, device(), n]);
+        }
       });
       return ids.length;
     },
@@ -187,7 +215,13 @@ export function createNotesRepo(db: Db, { now, newId }: Deps) {
       const ids = [id, ...descendantIds(id, await aliveTree())];
       const t = now();
       await db.transaction(async () => {
-        for (const n of ids) await db.run('UPDATE notes SET archived_at = ? WHERE id = ? AND archived_at IS NULL', [t, n]);
+        for (const n of ids) {
+          await db.run('UPDATE notes SET archived_at = ?, device_id = ? WHERE id = ? AND archived_at IS NULL', [
+            t,
+            device(),
+            n,
+          ]);
+        }
       });
       return ids.length;
     },
@@ -202,7 +236,7 @@ export function createNotesRepo(db: Db, { now, newId }: Deps) {
       );
       const ids = [id, ...descendantIds(id, batch.map((r) => ({ id: r.id, title: r.title, parentId: r.parent_id })))];
       await db.transaction(async () => {
-        for (const n of ids) await db.run('UPDATE notes SET archived_at = NULL WHERE id = ?', [n]);
+        for (const n of ids) await db.run('UPDATE notes SET archived_at = NULL, device_id = ? WHERE id = ?', [device(), n]);
       });
     },
 
@@ -235,7 +269,7 @@ export function createNotesRepo(db: Db, { now, newId }: Deps) {
       const parent = note.parentId ? all.find((r) => r.id === note.parentId) : undefined;
       const parentAlive = parent !== undefined && parent.deleted_at === null;
       await db.transaction(async () => {
-        for (const n of ids) await db.run('UPDATE notes SET deleted_at = NULL WHERE id = ?', [n]);
+        for (const n of ids) await db.run('UPDATE notes SET deleted_at = NULL, device_id = ? WHERE id = ?', [device(), n]);
         if (!parentAlive) await db.run('UPDATE notes SET parent_id = NULL WHERE id = ?', [id]);
       });
     },
@@ -279,6 +313,59 @@ export function createNotesRepo(db: Db, { now, newId }: Deps) {
         await db.run('DELETE FROM note_tags WHERE note_id NOT IN (SELECT id FROM notes)');
       });
       return old.length;
+    },
+
+    /** Toutes les notes, corbeille et archives comprises (sauvegarde). */
+    async exportAll(): Promise<Note[]> {
+      const rows = await db.all<Row>(`SELECT ${COLUMNS} FROM notes ORDER BY created_at, id`);
+      return rows.map(toNote);
+    },
+
+    /**
+     * Remplace toutes les notes par celles d'une sauvegarde (restauration), d'un seul bloc :
+     * en cas de problème, rien n'est changé. Les tags et l'index de recherche sont recalculés.
+     */
+    async replaceAll(notes: Note[]): Promise<void> {
+      await db.transaction(async () => {
+        await db.run('DELETE FROM notes');
+        await db.run('DELETE FROM notes_fts');
+        await db.run('DELETE FROM note_tags');
+        for (const n of notes) {
+          await db.run(`INSERT INTO notes (${COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+            n.id,
+            n.title,
+            n.body,
+            n.parentId,
+            n.pinned ? 1 : 0,
+            n.createdAt,
+            n.updatedAt,
+            n.deletedAt,
+            n.archivedAt,
+            n.authorId,
+            n.deviceId,
+          ]);
+          await writeIndex(n.id, n.title, n.body);
+        }
+      });
+    },
+
+    /**
+     * Attribue le compte et l'appareil du téléphone aux notes qui n'en ont pas encore : notes créées
+     * avant la version 3 de la base, ou venues d'une sauvegarde de version 1. Renvoie leur nombre.
+     */
+    async adoptUnowned(): Promise<number> {
+      const { authorId, deviceId } = identity();
+      if (authorId === null || deviceId === null) return 0;
+      const row = await db.first<{ n: number }>(
+        'SELECT COUNT(*) AS n FROM notes WHERE author_id IS NULL OR device_id IS NULL',
+      );
+      if (!row || row.n === 0) return 0;
+      await db.run(
+        `UPDATE notes SET author_id = COALESCE(author_id, ?), device_id = COALESCE(device_id, ?)
+         WHERE author_id IS NULL OR device_id IS NULL`,
+        [authorId, deviceId],
+      );
+      return row.n;
     },
 
     /** Efface toutes les notes (écran Compte, « Effacer toutes les données »). */

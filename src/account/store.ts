@@ -8,6 +8,8 @@ export type Account = {
   password: PasswordRecord;
   biometrics: boolean;
   lockDelayMin: number;
+  /** Identifiant d'auteur des notes (préparation au partage). Vide pour un compte d'avant : voir identity.ts. */
+  authorId: string;
 };
 
 /** Coffre clé → texte : expo-secure-store dans l'app, une table en mémoire dans les tests. */
@@ -27,6 +29,7 @@ export function parseAccount(raw: string | null): Account | null {
       password: a.password,
       biometrics: a.biometrics === true,
       lockDelayMin: typeof a.lockDelayMin === 'number' ? a.lockDelayMin : DEFAULT_LOCK_DELAY_MIN,
+      authorId: typeof a.authorId === 'string' ? a.authorId : '',
     };
   } catch {
     return null;

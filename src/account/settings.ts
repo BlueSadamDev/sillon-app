@@ -18,3 +18,6 @@ export const DEFAULT_LOCK_DELAY_MIN = 5;
 
 /** Nom de la donnée du compte dans le coffre sécurisé du téléphone (expo-secure-store). */
 export const ACCOUNT_KEY = 'sillon.account';
+
+/** Identifiant de cet appareil (préparation au partage), dans le coffre sécurisé, à part du compte. */
+export const DEVICE_ID_KEY = 'sillon.device';

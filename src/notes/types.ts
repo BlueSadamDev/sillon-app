@@ -17,4 +17,12 @@ export type Note = {
    * dans Pages (groupe « Archives ») et dans la recherche ; elle n'est jamais effacée toute seule.
    */
   archivedAt: number | null;
+  /**
+   * Préparation au partage (cahier des charges, 3.1) : identifiant d'auteur, celui du compte local qui a
+   * créé la note ; il ne change plus. null seulement pour une note venue d'une sauvegarde de version 1,
+   * le temps de lui attribuer le compte du téléphone.
+   */
+  authorId: string | null;
+  /** Identifiant de l'appareil de la dernière modification (même remarque pour null). */
+  deviceId: string | null;
 };

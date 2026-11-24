@@ -4,7 +4,7 @@ Application Android personnelle de prise de notes en Markdown. Une IA locale en 
 Tout se passe sur le téléphone : seule une sauvegarde chiffrée sort, dans un dossier pCloud.
 Référence : [docs/CAHIER_DES_CHARGES.md](docs/CAHIER_DES_CHARGES.md).
 
-## État actuel : lot 1 (socle)
+## État actuel : lot 2 (sauvegarde), en test
 
 - Compte local créé au premier lancement (seule l'empreinte du mot de passe est gardée, dans le coffre
   sécurisé du téléphone), déverrouillage par empreinte digitale ou mot de passe, délai de verrouillage réglable.
@@ -14,6 +14,11 @@ Référence : [docs/CAHIER_DES_CHARGES.md](docs/CAHIER_DES_CHARGES.md).
 - Recherche par mots (sans accents, par début de mot).
 - Archives (glisser une note de l’accueil vers la gauche) et corbeille (vers la droite).
 - Écran Compte : mot de passe, empreinte, délai de verrouillage, effacement de toutes les données.
+- Sauvegarde chiffrée (lot 2) : dossier pCloud choisi une fois, mot de passe de sauvegarde, sauvegarde
+  automatique une fois par jour (à l'ouverture de l'app et en tâche de fond) et bouton « Sauvegarder
+  maintenant ». Les 10 dernières sont gardées. Pastille d'état et message sur l'accueil en cas de problème.
+- Export en clair (écran Compte, groupe Données) : un fichier ZIP avec une note par fichier Markdown,
+  après un avertissement (le fichier n'est pas protégé).
 - Les bancs d'essai du lot 0 restent accessibles depuis l'écran Compte. Résultats :
   [docs/RAPPORT_LOT_0.md](docs/RAPPORT_LOT_0.md).
 
@@ -36,7 +41,17 @@ fichier `.apk` sur le téléphone, puis l'ouvrir pour l'installer.
 
 ## Restaurer une sauvegarde
 
-Disponible à partir du lot 2 (sauvegarde chiffrée vers un dossier pCloud).
+Il faut le **mot de passe de sauvegarde** : sans lui, aucune sauvegarde ne peut être relue.
+
+- **Sur le même téléphone** : Compte > Sauvegarde > « Restaurer une sauvegarde ».
+- **Sur un nouveau téléphone** : installer Sillon et l'app pCloud (connectée), puis, sur l'écran de
+  création du compte, toucher « Restaurer une sauvegarde ». L'identifiant de la sauvegarde est repris ;
+  on choisit ensuite le mot de passe du compte.
+
+Ensuite : choisir le fichier (dans le sélecteur, ouvrir pCloud puis le dossier de sauvegarde ; les
+fichiers s'appellent `sillon-AAAAMMJJ-HHMMSS.bin`), taper le mot de passe de sauvegarde, vérifier
+l'aperçu (date, nombre de notes), puis confirmer. Les notes du téléphone sont remplacées par celles de la
+sauvegarde.
 
 ## Vérifications avant chaque build
 

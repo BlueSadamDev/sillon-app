@@ -45,7 +45,8 @@
       "llama.rn",
       "expo-sqlite",
       "expo-secure-store",
-      "expo-local-authentication"
+      "expo-local-authentication",
+      "expo-background-task"
     ],
     "experiments": {
       "typedRoutes": true,

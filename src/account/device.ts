@@ -3,6 +3,7 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 import { crypto_pwhash, crypto_pwhash_ALG_ARGON2ID13, randombytes_buf } from 'react-native-libsodium';
 
+import { uuidFromBytes } from '@/notes/id';
 import { t } from '@/texts/fr';
 
 import type { Kdf } from './password';
@@ -17,6 +18,11 @@ export const secureStore: SecretStore = {
 
 export const argon2id: Kdf = (password, salt, opsLimit, memLimit, bytes) =>
   crypto_pwhash(bytes, password, salt, opsLimit, memLimit, crypto_pwhash_ALG_ARGON2ID13);
+
+/** Identifiant unique tiré au hasard (auteur, appareil). */
+export function newUuid(): string {
+  return uuidFromBytes(randombytes_buf(16));
+}
 
 export function newSalt(): Uint8Array {
   return randombytes_buf(PASSWORD_KDF.saltBytes);

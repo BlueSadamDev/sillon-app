@@ -3,7 +3,10 @@ import { File, Paths } from 'expo-file-system';
 import { useState } from 'react';
 
 import { makeFakeBackupJson } from '@/backup/__fixtures__/fakeNotes';
+import { BACKUP_V1_FILE, BACKUP_V1_PASSWORD } from '@/backup/__fixtures__/backupV1';
+import { fromBase64 } from '@/backup/cipher';
 import { decryptFile, encryptText } from '@/backup/crypto';
+import { parsePayload } from '@/backup/payload';
 import { BENCH_NOTE_COUNTS, BENCH_PASSWORD, KDF_PROFILES } from '@/backup/settings';
 import { BenchButton, BenchScreen, LogView, P } from '@/components/Bench';
 import { useLog } from '@/components/useLog';
@@ -74,6 +77,10 @@ export default function CryptoBench() {
       add(`En-tête abîmé : ${d2.ok ? 'ACCEPTÉ (problème !)' : `refusé (${d2.problem})`}`);
       const notOurs = decryptFile(new Uint8Array(100), BENCH_PASSWORD);
       add(`Fichier étranger : ${notOurs.ok ? 'ACCEPTÉ (problème !)' : `refusé (${notOurs.problem})`}`);
+      // Fichier de référence du format 1, fabriqué par les tests sur l'ordinateur : libsodium doit le relire.
+      const v1 = decryptFile(fromBase64(BACKUP_V1_FILE)!, BACKUP_V1_PASSWORD);
+      const v1ok = v1.ok && parsePayload(v1.text).ok;
+      add(`Fichier de référence (format 1) : ${v1ok ? 'relu' : `ILLISIBLE (problème !)${v1.ok ? '' : ` (${v1.problem})`}`}`);
     } catch (e) {
       add(`ÉCHEC ${errorText(e)}`);
     }

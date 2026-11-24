@@ -1,6 +1,6 @@
 import { FAKE_NOTES } from '@/notes/__fixtures__/notes';
 
-import { createNotesRepo } from './notesRepo';
+import { createNotesRepo, type NoteIdentity } from './notesRepo';
 import { migrate, SCHEMA_VERSION } from './schema';
 import { memoryDb } from './testing/nodeDb';
 
@@ -11,8 +11,9 @@ async function setup() {
   await migrate(db);
   let clock = 1_000_000;
   let counter = 0;
-  const repo = createNotesRepo(db, { now: () => clock, newId: () => `id-${++counter}` });
-  return { db, repo, tick: (ms = 1000) => (clock += ms) };
+  const identity: NoteIdentity = { authorId: 'auteur-fictif', deviceId: 'appareil-a' };
+  const repo = createNotesRepo(db, { now: () => clock, newId: () => `id-${++counter}`, identity: () => identity });
+  return { db, repo, identity, tick: (ms = 1000) => (clock += ms) };
 }
 
 describe('base des notes', () => {
@@ -177,6 +178,51 @@ describe('base des notes', () => {
     await migrate(db);
     const repo = createNotesRepo(db, { now: () => 2, newId: () => 'x' });
     expect(await repo.get('ancienne')).toMatchObject({ title: 'Note fictive', archivedAt: null });
+  });
+
+  it('met à jour une base de la version 2 : les notes reçoivent le compte et l’appareil', async () => {
+    const db = memoryDb();
+    await db.exec(`CREATE TABLE notes (id TEXT PRIMARY KEY NOT NULL, title TEXT NOT NULL DEFAULT '', body TEXT NOT NULL DEFAULT '',
+      parent_id TEXT, pinned INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, deleted_at INTEGER,
+      archived_at INTEGER);
+      CREATE TABLE note_tags (note_id TEXT NOT NULL, tag TEXT NOT NULL, PRIMARY KEY (note_id, tag));
+      CREATE VIRTUAL TABLE notes_fts USING fts5 (id UNINDEXED, title, body, tokenize = 'unicode61 remove_diacritics 2');
+      INSERT INTO notes VALUES ('ancienne', 'Note fictive', 'texte', NULL, 0, 1, 7, NULL, NULL);
+      PRAGMA user_version = 2;`);
+    await migrate(db);
+    let identity: NoteIdentity = { authorId: null, deviceId: 'appareil-a' };
+    const repo = createNotesRepo(db, { now: () => 2, newId: () => 'x', identity: () => identity });
+    expect(await repo.get('ancienne')).toMatchObject({ authorId: null, deviceId: null });
+    expect(await repo.adoptUnowned()).toBe(0); // pas encore de compte : on attend
+    identity = { authorId: 'auteur-fictif', deviceId: 'appareil-a' };
+    expect(await repo.adoptUnowned()).toBe(1);
+    expect(await repo.get('ancienne')).toMatchObject({ authorId: 'auteur-fictif', deviceId: 'appareil-a', updatedAt: 7 });
+    expect(await repo.adoptUnowned()).toBe(0);
+  });
+
+  it('note l’auteur à la création et l’appareil à chaque écriture', async () => {
+    const { repo, identity } = await setup();
+    const parent = await repo.create(FAKE_NOTES.jardin);
+    const n = await repo.create(FAKE_NOTES.tomates);
+    expect(n).toMatchObject({ authorId: 'auteur-fictif', deviceId: 'appareil-a' });
+    expect(await repo.get(n.id)).toMatchObject({ authorId: 'auteur-fictif', deviceId: 'appareil-a' });
+
+    const writes: [string, () => Promise<unknown>][] = [
+      ['modification', () => repo.update(n.id, { title: 'Tomates', body: 'Texte fictif.' })],
+      ['épingle', () => repo.setPinned(n.id, true)],
+      ['déplacement', () => repo.move(n.id, parent.id)],
+      ['archive', () => repo.archive(n.id)],
+      ['sortie des archives', () => repo.unarchive(n.id)],
+      ['corbeille', () => repo.trash(n.id)],
+      ['sortie de la corbeille', () => repo.restore(n.id)],
+    ];
+    for (const [label, write] of writes) {
+      identity.deviceId = `appareil-${label}`;
+      await write();
+      expect([label, (await repo.get(n.id))?.deviceId]).toEqual([label, `appareil-${label}`]);
+      // L'auteur ne change jamais.
+      expect((await repo.get(n.id))?.authorId).toBe('auteur-fictif');
+    }
   });
 
   it('efface toutes les notes', async () => {

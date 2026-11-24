@@ -1,20 +1,65 @@
 // Compte (DESIGN.md, « Écrans du lot 1 », n° 9) : Sécurité, Sauvegarde (lot 2), Données.
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAccount } from '@/account/AccountProvider';
+import { useBackup } from '@/backup/BackupProvider';
 import { LOCK_DELAYS_MIN } from '@/account/settings';
 import { BackHeader } from '@/components/BackHeader';
 import { SectionLabel } from '@/components/notes';
-import { SecondaryButton, TextLink } from '@/components/ui';
+import { useToast } from '@/components/Toast';
+import { PrimaryButton, ProblemText, SecondaryButton, TextLink } from '@/components/ui';
+import { exportPlainZip } from '@/backup/exportDevice';
+import { daysBetween } from '@/backup/status';
 import { openNotes } from '@/db/expoDb';
+import { shortDate } from '@/texts/dates';
 import { t } from '@/texts/fr';
 import { colors, font, radius, space, TOUCH, type } from '@/theme';
 
 export default function AccountScreen() {
   const account = useAccount();
+  const backup = useBackup();
+  const toast = useToast();
   const a = t.accountScreen;
+  const [exporting, setExporting] = useState(false);
+
+  const b = t.backup;
+
+  async function changeFolder() {
+    if (await backup.chooseFolder()) toast({ message: a.backupFolderChanged });
+  }
+
+  async function backupNow() {
+    const result = await backup.backupNow();
+    if (result.ok) toast({ message: b.done });
+  }
+
+  function lastBackupText(): string {
+    const last = backup.status.lastSuccessAt;
+    if (last === null) return b.never;
+    const now = new Date();
+    const days = daysBetween(last, now);
+    if (days === 0) return b.lastToday(shortDate(last, now));
+    return days === 1 ? b.lastYesterday : b.lastDays(days);
+  }
+
+  function confirmExport() {
+    const e = t.exportPlain;
+    Alert.alert(e.warningTitle, e.warningText, [
+      { text: e.cancel, style: 'cancel' },
+      { text: e.choose, onPress: () => void runExport() },
+    ]);
+  }
+
+  async function runExport() {
+    setExporting(true);
+    const result = await exportPlainZip();
+    setExporting(false);
+    if (result.ok) toast({ message: t.exportPlain.done(result.folder) });
+    else if (result.problem === 'failed') toast({ message: t.exportPlain.failed });
+  }
 
   function confirmWipe() {
     Alert.alert(a.wipeTitle, a.wipeText, [
@@ -23,7 +68,7 @@ export default function AccountScreen() {
         text: a.wipeContinue,
         style: 'destructive',
         onPress: () =>
-          Alert.alert(a.wipeTitle2, a.wipeText2, [
+          Alert.alert(a.wipeTitle2, backup.folderName ? a.wipeText2Backup : a.wipeText2, [
             { text: a.keep, style: 'cancel' },
             { text: a.wipeConfirm, style: 'destructive', onPress: wipe },
           ]),
@@ -33,6 +78,7 @@ export default function AccountScreen() {
 
   async function wipe() {
     await (await openNotes()).wipe();
+    await backup.forget();
     await account.forget();
   }
 
@@ -89,13 +135,63 @@ export default function AccountScreen() {
 
         <View style={styles.group}>
           <SectionLabel>{a.backup}</SectionLabel>
-          <View style={[styles.card, styles.block]}>
-            <Text style={type.secondary}>{a.backupSoon}</Text>
-          </View>
+          {backup.configured ? (
+            <View style={styles.card}>
+              <View style={styles.block}>
+                <Text style={type.rowTitle}>{a.backupFolder(backup.folderName ?? '')}</Text>
+                {backup.problem ? (
+                  <ProblemText>{b.problems[backup.problem]}</ProblemText>
+                ) : (
+                  <Text style={type.secondary}>{lastBackupText()}</Text>
+                )}
+                {backup.problem === 'folder-lost' ? (
+                  <PrimaryButton label={b.chooseAgain} onPress={changeFolder} disabled={backup.running} />
+                ) : (
+                  <PrimaryButton
+                    label={backup.running ? b.running : b.now}
+                    onPress={backupNow}
+                    disabled={backup.running}
+                  />
+                )}
+                {backup.problem === 'folder-lost' ? (
+                  <SecondaryButton label={b.now} onPress={backupNow} disabled={backup.running} />
+                ) : (
+                  <SecondaryButton label={a.backupOtherFolder} onPress={changeFolder} disabled={backup.running} />
+                )}
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => router.push({ pathname: '/sauvegarde', params: { mode: 'password' } })}
+                style={[styles.row, styles.separator]}>
+                <Text style={type.rowTitle}>{a.backupChangePassword}</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => router.push('/restaurer')}
+                disabled={backup.running}
+                style={[styles.row, styles.separator]}>
+                <Text style={type.rowTitle}>{t.restore.title}</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={[styles.card, styles.block]}>
+              <Text style={type.secondary}>{a.backupNone}</Text>
+              <PrimaryButton label={a.backupSetup} onPress={() => router.push('/sauvegarde')} />
+              <SecondaryButton label={t.restore.title} onPress={() => router.push('/restaurer')} />
+            </View>
+          )}
         </View>
 
         <View style={styles.group}>
           <SectionLabel>{a.data}</SectionLabel>
+          <View style={[styles.card, styles.block]}>
+            <Text style={type.secondary}>{t.exportPlain.hint}</Text>
+            <SecondaryButton
+              label={exporting ? t.exportPlain.running : t.exportPlain.button}
+              onPress={confirmExport}
+              disabled={exporting}
+            />
+          </View>
           <View style={[styles.card, styles.block]}>
             <Text style={type.secondary}>{a.wipeHint}</Text>
             <SecondaryButton label={a.wipe} onPress={confirmWipe} />
