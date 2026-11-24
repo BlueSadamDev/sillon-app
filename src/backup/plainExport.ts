@@ -2,6 +2,7 @@
 // Calcul pur. « Jardin » devient « Jardin.md », ses sous-notes vont dans le dossier « Jardin/ ».
 // Les archives vont dans « Archives/ », la corbeille dans « Corbeille/ ».
 // Le fichier ZIP n'est PAS chiffré : il n'est créé que sur demande, après un avertissement.
+import { noteMarkdown } from '@/notes/markdown';
 import type { Note } from '@/notes/types';
 
 import type { ZipEntry } from './zip';
@@ -28,7 +29,7 @@ function sectionOf(n: Note, labels: ExportLabels): string {
 }
 
 export function noteFile(n: Note): string {
-  return n.title.trim() === '' ? `${n.body}\n` : `# ${n.title.trim()}\n\n${n.body}\n`;
+  return noteMarkdown(n);
 }
 
 export function exportEntries(notes: Note[], labels: ExportLabels): ZipEntry[] {

@@ -52,6 +52,8 @@ export const t = {
     archivedWithChildren: (n: number) =>
       `Note et ${n === 1 ? '1\u00a0sous-note archivées' : `${n}\u00a0sous-notes archivées`}.`,
     unarchived: 'Note sortie des archives.',
+    copyAll: 'Copier tout le texte',
+    copied: 'Texte de la note copié.',
     modified: (when: string) => `Modifiée ${when}`,
     tools: {
       heading: 'Titre',

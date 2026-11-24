@@ -2,6 +2,7 @@
 // tags et date de modification, corps en mode écriture ou lecture, barre d'outils Markdown.
 // Enregistrement automatique ; bascule « Lire » / « Écrire » dans l'en-tête et « Enregistrer » dans la
 // barre d'outils (lot 1.1).
+import * as Clipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -29,6 +30,7 @@ import { MarkdownView } from '@/editor/MarkdownView';
 import { SAVE_DELAY_MS } from '@/editor/settings';
 import { Toolbar } from '@/editor/Toolbar';
 import { useKeyboardVisible } from '@/editor/useKeyboardVisible';
+import { noteMarkdown } from '@/notes/markdown';
 import { extractTags } from '@/notes/tags';
 import { buildTree, descendantIds, pathOf, type TreeNode } from '@/notes/tree';
 import { modifiedWhen } from '@/texts/dates';
@@ -182,6 +184,13 @@ export default function NoteScreen() {
     setMode(mode === 'write' ? 'read' : 'write');
   }
 
+  /** Menu « … » : copie la note entière en Markdown dans le presse-papiers (lot 1.1). */
+  async function copyAll() {
+    setMenu('none');
+    await Clipboard.setStringAsync(noteMarkdown(latest.current));
+    toast({ message: t.note.copied });
+  }
+
   async function toggleArchive() {
     setMenu('none');
     await save();
@@ -331,6 +340,7 @@ export default function NoteScreen() {
 
       <Sheet visible={menu === 'actions'} onClose={() => setMenu('none')}>
         <SheetItem label={pinned ? t.note.unpin : t.note.pin} onPress={togglePin} />
+        <SheetItem label={t.note.copyAll} onPress={copyAll} />
         <SheetItem label={t.note.newChild} onPress={newChild} />
         <SheetItem label={t.note.move} onPress={() => setMenu('move')} />
         <SheetItem label={archived ? t.note.unarchive : t.note.archive} onPress={toggleArchive} />
