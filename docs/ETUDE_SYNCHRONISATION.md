@@ -68,7 +68,7 @@ Rien ne change pour l'IA (toujours 100 % sur l'appareil), le partage simple (lot
 
 ### 4.1 Machine et système
 - **Matériel** : Atom x5-Z8350, 4 Go de RAM (non extensibles), 64 Go eMMC. Le relais demande peu : quelques dizaines de Mo de mémoire, quelques Mo de disque pour des milliers de notes.
-- **Système recommandé** : Debian stable, sans interface graphique. Si le mini PC tourne aujourd'hui sous Windows, le passage à Debian demande de réinstaller AdGuard Home (qui existe pour Linux) : **décision à prendre** (section 13).
+- **Système retenu** : Debian stable, sans interface graphique (décision du 24 novembre 2026). Si le mini PC tourne aujourd'hui sous Windows, le passage à Debian demande de réinstaller AdGuard Home (qui existe pour Linux) en reprenant sa configuration.
 - **Coexistence avec AdGuard Home** : le relais utilise un port libre (par exemple 8443), jamais les ports 53, 80 ou 3000. La configuration d'AdGuard Home n'est jamais touchée.
 
 ### 4.2 Logiciel
@@ -205,7 +205,7 @@ Quand une note accumule beaucoup de petites modifications, un appareil envoie un
 
 | Fonction | Effet |
 | --- | --- |
-| Sauvegarde pCloud (lot 2) | Inchangée. Faite par **un seul appareil désigné** (le téléphone par défaut), pour éviter deux rotations concurrentes dans le même dossier. Restaurer une sauvegarde sur un coffre synchronisé = nouvelle version de toutes les notes, envoyée aux autres appareils, après confirmation explicite. |
+| Sauvegarde pCloud (lot 2) | Inchangée. Faite par **un seul appareil désigné** (le téléphone, décision du 24 novembre 2026), pour éviter deux rotations concurrentes dans le même dossier. Restaurer une sauvegarde sur un coffre synchronisé = nouvelle version de toutes les notes, envoyée aux autres appareils, après confirmation explicite. |
 | Recherche par mots et par le sens (lot 3) | Inchangées : elles lisent la table `notes` matérialisée. Les vecteurs sont recalculés sur chaque appareil. |
 | IA (lots 4, 4.1, 5) | Inchangée sur chaque appareil. La remise en forme (lot 4.1) produit une modification normale, donc synchronisée. Les tableaux d'actions restent calculés à partir des notes. |
 | Partage simple (lot 2.1) | Inchangé. |
@@ -245,11 +245,11 @@ Le relais et le format ci-dessus sont conçus pour s'étendre à plusieurs perso
 - **Migration des notes existantes** vers Yjs : une seule fois, testée sur notes fictives, avec sauvegarde forcée juste avant.
 - **Complexité** : c'est le chantier le plus lourd de Sillon. D'où un lot de faisabilité, un banc de chaos et une relecture du protocole avant le lot 7.
 
-## 13. Décisions à prendre
+## 13. Décisions prises (24 novembre 2026)
 
-1. **Système du mini PC** : passer à Debian (recommandé) ou rester sous Windows.
-2. **Place dans la feuille de route** : proposition, faire les lots 7.0 et 7 **juste après le lot 3**, avant les lots 4, 4.1 et 5, qui modifient aussi les notes. Brancher l'éditeur sur Yjs avant d'empiler d'autres fonctions évite de les reprendre.
-3. **Appareil chargé de la sauvegarde pCloud** : le téléphone, par défaut.
+1. **Système du mini PC : Debian** (stable, sans interface graphique). AdGuard Home est réinstallé sous Debian si nécessaire, avec sa configuration actuelle.
+2. **Place dans la feuille de route** : lots 7.0 et 7 **juste après le lot 3**, avant les lots 4, 4.1 et 5.
+3. **Appareil chargé de la sauvegarde pCloud** : le téléphone.
 
 ## 14. Découpage proposé
 

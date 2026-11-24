@@ -25,7 +25,7 @@ Version 0.4 (22 novembre 2026). Changements par rapport à la 0.3 (décisions du
 | App Android | Saisie, lecture, recherche, IA, sauvegarde | Expo (React Native, TypeScript), SQLite local, rendu Markdown par react-native-marked, APK construit par GitHub Actions |
 | IA locale | Embeddings (recherche par le sens) et rédaction des insights | llama.rn ; modèle de rédaction LFM2.5 1.2B (validé sur Aube) ; modèle d'embeddings EmbeddingGemma 300M QAT Q8_0 (313 Mo, choisi au lot 0) |
 | Sauvegarde | Copie chiffrée hors du téléphone | Fichier chiffré par l'app, écrit dans un **dossier pCloud choisi une fois** via le sélecteur de dossiers d'Android (l'app pCloud joue le rôle de « fournisseur de fichiers ») ; chiffrement par react-native-libsodium |
-| Synchronisation (lot 7) | Mêmes notes sur le téléphone et la tablette | Relais Node.js sur le mini PC (Minisforum Z83-F, Debian recommandé), joint uniquement par Tailscale ; notes en documents Yjs, messages chiffrés (XChaCha20-Poly1305) et signés (Ed25519) par les appareils ; voir `docs/ETUDE_SYNCHRONISATION.md` |
+| Synchronisation (lot 7) | Mêmes notes sur le téléphone et la tablette | Relais Node.js sur le mini PC (Minisforum Z83-F, sous Debian), joint uniquement par Tailscale ; notes en documents Yjs, messages chiffrés (XChaCha20-Poly1305) et signés (Ed25519) par les appareils ; voir `docs/ETUDE_SYNCHRONISATION.md` |
 
 L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier dans le dossier pCloud, c'est l'app pCloud qui l'envoie dans le cloud. À partir du lot 7, la permission Internet est ajoutée, **limitée au module de synchronisation et à l'adresse Tailscale du relais** (étude, section 3).
 
@@ -182,7 +182,7 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 - **Lot 7 – Duo téléphone et tablette** : installation du relais, clé de coffre, appairage par QR code et quatre mots de vérification, clé de secours, écran « Mes appareils » (retrait, effacement à distance), migration des notes vers Yjs, synchronisation, historique des versions, test `networkGuard`, banc de chaos, sauvegarde depuis l'appareil désigné.
 - **Lot 7.1 – Écran tablette** : affichage en deux colonnes (liste à gauche, note à droite).
 - **Lot 8 – Collaboration** (étude, section 11) : identités, espaces partagés avec leur propre clé, invitations, droits lecture / écriture appliqués par signature, présence, commentaires, règle IA, cadrage des données personnelles. Complément au cahier des charges à écrire avant le lot.
-- **Ordre proposé** : lots 7.0 et 7 juste après le lot 3, avant les lots 4, 4.1 et 5 (décision à confirmer, étude section 13).
+- **Ordre retenu** (24 novembre 2026) : lots 7.0 et 7 juste après le lot 3, avant les lots 4, 4.1 et 5. Mini PC sous Debian ; sauvegarde pCloud faite par le téléphone (étude, section 13).
 - **Plus tard** : bases de données façon Notion, import de PDF, version sur ordinateur (elle se brancherait sur le relais du lot 7), appareil « jardinier » qui calcule l'IA pour les autres.
 - **Partage et collaboration** : remplacés par les lots 7 et 8 ci-dessus. L'option « dossier pCloud partagé » est abandonnée au profit du relais (étude, section 1).
 
