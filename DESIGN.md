@@ -78,7 +78,7 @@ Contraste : tout texte atteint 4,5:1 sur son fond. **`accent` ne s'utilise jamai
 - **Bouton principal** : fond `accent`, texte blanc 14–15/700, hauteur 44–52 px, rayon 10–12.
 - **Bouton secondaire** : contour `line`, fond `surface`, texte `ink`.
 - **Barre d'outils Markdown** (au-dessus du clavier) : fond `surface`, bordure haute `line` ; boutons 44 × 44 transparents : Titre (H), Gras (B), Italique (I), Liste, Case à cocher, Lien vers une note `[[ ]]` (micro au lot 6) ; à droite, bouton principal « Enregistrer » (enregistre et revient), depuis le lot 1.1. Le bouton « Case à cocher » coche ou décoche la case de la ligne du curseur.
-- **Bloc « Notes liées »** (bas d'une note, lot 3) : carte `surface`, libellé avec l'icône de pousse, puces cliquables (fond `bg`, bordure `line`, rayon 10, 13 px).
+- **Bloc « Notes liées »** (bas d'une note, lot 3) : carte `surface`, libellé avec l'icône de pousse, puces cliquables (fond `bg`, bordure `line`, rayon 10, 13 px). Affiché en mode lecture, au plus 5 notes.
 - **Citation** : trait vertical 2 px `#D9CFBB` à gauche (bordure intérieure, pas une carte), texte `inkSoft` en italique.
 - **Case à cocher** : 18 px, couleur `accent` ; tâche faite barrée et en `inkMuted`. En mode lecture, la zone tactile de la case fait au moins 44 × 44 px (lot 1.1).
 - **Barre de navigation** : 4 onglets égaux (Accueil, Pages, Recherche, Insights), icône 22 px + libellé 11 px, actif en `ink` 700, inactifs en `inkMuted`, fond `surface`, bordure haute `line`.
@@ -103,7 +103,9 @@ Contraste : tout texte atteint 4,5:1 sur son fond. **`accent` ne s'utilise jamai
 - **Pas encore d'insight** : carte d'insight avec le texte d'attente (voir Composants).
 - **Sauvegarde jamais configurée** : pastille `warn` « Sauvegarde à configurer », qui ouvre l'écran Compte.
 - **Dossier pCloud inaccessible** : pastille `error` et message dans Compte avec « Choisir le dossier à nouveau ».
-- **Modèle IA absent** (lot 4) : les écrans d'insight expliquent comment importer le modèle, sans erreur technique.
+- **Modèle IA absent** (lots 3 et 4) : le bloc « Notes liées », la partie « Par le sens » de la recherche (lot 3) et les écrans d'insight (lot 4) expliquent comment importer le modèle, sans erreur technique, avec un lien vers l'écran du modèle.
+- **Calcul en cours** (lot 3) : une phrase dit que Sillon lit les notes (« Sillon a lu 12 notes sur 140 »), sans bloquer l'écran.
+- **Aucune note assez proche** (lot 3) : « Aucune note n'est assez proche pour l'instant. »
 - **Notes fictives** : uniquement dans les tests et les maquettes, jamais dans l'app livrée.
 
 ## Textes

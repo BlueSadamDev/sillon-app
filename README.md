@@ -4,7 +4,9 @@ Application Android personnelle de prise de notes en Markdown. Une IA locale en 
 Tout se passe sur le téléphone : seule une sauvegarde chiffrée sort, dans un dossier pCloud.
 Référence : [docs/CAHIER_DES_CHARGES.md](docs/CAHIER_DES_CHARGES.md).
 
-## État actuel : lot 2.1 (partage simple), testé
+## État actuel : lot 3 (recherche par le sens), en cours de test
+
+Lot 2.1 (partage simple) testé. Lot 3 : APK à construire et à tester ([docs/TESTS_LOT_3.md](docs/TESTS_LOT_3.md)).
 
 - Compte local créé au premier lancement (seule l'empreinte du mot de passe est gardée, dans le coffre
   sécurisé du téléphone), déverrouillage par empreinte digitale ou mot de passe, délai de verrouillage réglable.
@@ -18,6 +20,11 @@ Référence : [docs/CAHIER_DES_CHARGES.md](docs/CAHIER_DES_CHARGES.md).
   d'Android. Aucune permission Internet. Tests sur le téléphone : [docs/TESTS_LOT_2_1.md](docs/TESTS_LOT_2_1.md).
 - Pages : arborescence des notes et sous-notes, corbeille de 30 jours.
 - Recherche par mots (sans accents, par début de mot).
+- Recherche par le sens et notes liées (lot 3) : le modèle EmbeddingGemma 300M (fichier
+  `embeddinggemma-300m-qat-Q8_0.gguf`, environ 313 Mo) s'importe à la main dans Compte > Recherche par le
+  sens ; Sillon vérifie sa taille et son empreinte SHA-256. Chaque note reçoit un vecteur (calculé sur le
+  téléphone, jamais sauvegardé) ; sous une note, le bloc « Notes liées » montre les plus proches, et
+  l'onglet Recherche ajoute une partie « Par le sens ». Seuil réglable (Large, Normale, Stricte).
 - Archives (glisser une note de l’accueil vers la gauche) et corbeille (vers la droite).
 - Écran Compte : mot de passe, empreinte, délai de verrouillage, effacement de toutes les données.
 - Sauvegarde chiffrée (lot 2) : dossier pCloud choisi une fois, mot de passe de sauvegarde, sauvegarde
