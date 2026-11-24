@@ -133,8 +133,10 @@ const md = StyleSheet.create({
     paddingLeft: 12,
     backgroundColor: 'transparent',
   },
-  // La case (44 px) déborde de la ligne de texte (27 px) sans l'agrandir.
-  taskRow: { flexDirection: 'row', alignItems: 'flex-start' },
+  // La ligne prend toute la largeur laissée par la puce (sans flex: 1, la bibliothèque de listes la
+  // réduit à la taille de son contenu, et le texte disparaît). La case (44 px) déborde de la ligne de
+  // texte (27 px) sans l'agrandir.
+  taskRow: { flex: 1, flexDirection: 'row', alignItems: 'flex-start' },
   taskBox: {
     width: TOUCH,
     height: TOUCH,
