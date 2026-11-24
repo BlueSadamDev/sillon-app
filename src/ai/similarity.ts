@@ -1,6 +1,6 @@
 // Calculs purs pour la recherche par le sens : proximité entre vecteurs et mesure de qualité.
 
-export function cosine(a: number[], b: number[]): number {
+export function cosine(a: ArrayLike<number>, b: ArrayLike<number>): number {
   if (a.length !== b.length || a.length === 0) throw new Error('Vecteurs de tailles différentes');
   let dot = 0;
   let na = 0;
@@ -17,7 +17,7 @@ export function cosine(a: number[], b: number[]): number {
 export type Ranked = { id: string; score: number };
 
 /** Les éléments classés du plus proche au moins proche. */
-export function rank(query: number[], docs: { id: string; vector: number[] }[]): Ranked[] {
+export function rank(query: ArrayLike<number>, docs: { id: string; vector: ArrayLike<number> }[]): Ranked[] {
   return docs
     .map((d) => ({ id: d.id, score: cosine(query, d.vector) }))
     .sort((x, y) => y.score - x.score);

@@ -5,6 +5,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAccount } from '@/account/AccountProvider';
+import { useSemantic } from '@/ai/SemanticProvider';
 import { useBackup } from '@/backup/BackupProvider';
 import { LOCK_DELAYS_MIN } from '@/account/settings';
 import { BackHeader } from '@/components/BackHeader';
@@ -21,6 +22,7 @@ import { colors, font, radius, space, TOUCH, type } from '@/theme';
 export default function AccountScreen() {
   const account = useAccount();
   const backup = useBackup();
+  const semantic = useSemantic();
   const toast = useToast();
   const a = t.accountScreen;
   const [exporting, setExporting] = useState(false);
@@ -180,6 +182,17 @@ export default function AccountScreen() {
               <SecondaryButton label={t.restore.title} onPress={() => router.push('/restaurer')} />
             </View>
           )}
+        </View>
+
+        <View style={styles.group}>
+          <SectionLabel>{t.semantic.title}</SectionLabel>
+          <View style={styles.card}>
+            <Pressable accessibilityRole="button" onPress={() => router.push('/modele')} style={styles.row}>
+              <Text style={[type.rowTitle, styles.grow]}>
+                {semantic.modelStatus === 'ready' ? t.semantic.accountReady : t.semantic.accountAbsent}
+              </Text>
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.group}>

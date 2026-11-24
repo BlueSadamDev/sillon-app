@@ -104,6 +104,19 @@ export function createVectorsRepo(db: Db, { now }: { now: () => number }) {
     async clear(): Promise<void> {
       await db.run('DELETE FROM note_vectors');
     },
+
+    /** Réglage propre au téléphone (seuil des notes liées…), rangé hors des notes et de la sauvegarde. */
+    async localSetting(key: string): Promise<string | null> {
+      const row = await db.first<{ value: string }>('SELECT value FROM local_state WHERE key = ?', [key]);
+      return row?.value ?? null;
+    },
+
+    async setLocalSetting(key: string, value: string): Promise<void> {
+      await db.run(
+        'INSERT INTO local_state (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value',
+        [key, value],
+      );
+    },
   };
 }
 

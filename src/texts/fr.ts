@@ -103,6 +103,60 @@ export const t = {
     noneEnd: ' ou essaie un autre mot.',
     count: (n: number) => (n === 1 ? '1\u00a0note trouvée' : `${n}\u00a0notes trouvées`),
   },
+  semantic: {
+    // Écran du modèle (Compte)
+    title: 'Recherche par le sens',
+    intro:
+      'Sillon trouve les notes liées par le sens grâce à un modèle installé sur ce téléphone. Rien ne sort du téléphone.',
+    absent: (file: string) =>
+      `Le modèle n’est pas encore installé. Copie le fichier ${file} sur le téléphone, puis importe-le ici.`,
+    import: 'Importer le modèle',
+    checking: 'Sillon vérifie le fichier, cela prend quelques secondes…',
+    installed: (size: string) => `Modèle installé sur ce téléphone (${size}).`,
+    progress: (done: number, total: number) => `Sillon a lu ${done}\u00a0${done === 1 ? 'note' : 'notes'} sur ${total}.`,
+    allRead: 'Toutes tes notes sont prises en compte.',
+    noNotes: 'Tes notes seront prises en compte dès que tu en écriras.',
+    failed:
+      'Sillon n’a pas pu lire certaines notes. Il réessaiera à la prochaine modification. Si cela se répète, ferme complètement l’app puis rouvre-la.',
+    refused: {
+      'not-gguf': 'Ce fichier n’est pas un modèle. Choisis le fichier qui finit par .gguf.',
+      'wrong-size': 'Ce fichier n’a pas la taille du modèle attendu. Vérifie que tu as copié le bon fichier.',
+      'wrong-file': 'Ce fichier n’est pas le modèle attendu, ou il est abîmé. Copie-le à nouveau sur le téléphone.',
+      'no-space': 'Il n’y a pas assez de place sur le téléphone. Libère environ 500\u00a0Mo, puis réessaie.',
+      unreadable: 'Sillon n’a pas pu lire ce fichier. Copie-le à nouveau sur le téléphone, puis réessaie.',
+    },
+    installedToast: 'Modèle installé. Sillon lit maintenant tes notes.',
+    level: 'Proximité des notes liées',
+    levels: { large: 'Large', normal: 'Normale', strict: 'Stricte' },
+    levelHint: 'Large montre plus de notes, Stricte seulement les plus proches.',
+    remove: 'Supprimer le modèle',
+    removeTitle: 'Supprimer le modèle\u00a0?',
+    removeText:
+      'Les notes liées et la recherche par le sens s’arrêteront. Tes notes ne sont pas touchées, et tu pourras réimporter le modèle.',
+    removeConfirm: 'Supprimer',
+    keep: 'Garder le modèle',
+    removed: 'Modèle supprimé.',
+    // Compte
+    accountReady: 'Modèle installé',
+    accountAbsent: 'Modèle à importer',
+    // Bloc « Notes liées »
+    related: 'Notes liées',
+    relatedAbsent: 'Pour voir les notes liées, Sillon a besoin de son modèle. ',
+    relatedAbsentAction: 'Importe-le depuis Compte.',
+    relatedPending: 'Sillon lit cette note, les notes liées apparaîtront dans un instant.',
+    relatedNone: 'Aucune note n’est assez proche pour l’instant.',
+    relatedOpen: (title: string) => `Ouvrir la note liée «\u00a0${title}\u00a0»`,
+    // Onglet Recherche
+    byWords: 'Avec ces mots',
+    bySense: 'Par le sens',
+    senseAbsent: 'Pour chercher par le sens, Sillon a besoin de son modèle. ',
+    senseAbsentAction: 'Importe-le depuis Compte.',
+    senseRunning: 'Sillon cherche par le sens…',
+    senseIndexing: (done: number, total: number) =>
+      `Sillon lit encore tes notes (${done} sur ${total})\u00a0: certains résultats peuvent manquer.`,
+    senseNone: 'Aucune autre note n’est assez proche par le sens.',
+    senseFailed: 'Sillon n’a pas pu chercher par le sens. Réessaie dans un instant.',
+  },
   soon: {
     insights: 'Sillon repérera ici les idées qui reviennent dans tes notes, dans une prochaine version.',
   },
