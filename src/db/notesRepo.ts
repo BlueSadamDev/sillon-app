@@ -57,6 +57,7 @@ export type Deps = {
 };
 
 const NO_IDENTITY: NoteIdentity = { authorId: null, deviceId: null };
+const DRAFT_KEY = 'capture-draft';
 
 export function createNotesRepo(db: Db, { now, newId, identity = () => NO_IDENTITY }: Deps) {
   /** Appareil de la dernière modification : noté à chaque écriture d'une note. */
@@ -368,12 +369,31 @@ export function createNotesRepo(db: Db, { now, newId, identity = () => NO_IDENTI
       return row.n;
     },
 
-    /** Efface toutes les notes (écran Compte, « Effacer toutes les données »). */
+    /**
+     * Brouillon de la capture rapide (lot 1.1) : gardé dans la base du téléphone, jamais sauvegardé.
+     * Un texte vide efface le brouillon.
+     */
+    async captureDraft(): Promise<string> {
+      const row = await db.first<{ value: string }>('SELECT value FROM local_state WHERE key = ?', [DRAFT_KEY]);
+      return row?.value ?? '';
+    },
+
+    async setCaptureDraft(text: string): Promise<void> {
+      if (text === '') await db.run('DELETE FROM local_state WHERE key = ?', [DRAFT_KEY]);
+      else
+        await db.run(
+          'INSERT INTO local_state (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value',
+          [DRAFT_KEY, text],
+        );
+    },
+
+    /** Efface toutes les notes et les états du téléphone (écran Compte, « Effacer toutes les données »). */
     async wipe(): Promise<void> {
       await db.transaction(async () => {
         await db.run('DELETE FROM notes');
         await db.run('DELETE FROM notes_fts');
         await db.run('DELETE FROM note_tags');
+        await db.run('DELETE FROM local_state');
       });
     },
   };

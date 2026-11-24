@@ -12,6 +12,7 @@ import { useToast } from '@/components/Toast';
 import { InsightCard, NoteRow, PinnedCard, QuickCapture, SectionLabel } from '@/components/notes';
 import { notesChanged } from '@/db/events';
 import { openNotes } from '@/db/expoDb';
+import { useCaptureDraft } from '@/db/useCaptureDraft';
 import { useNotesQuery } from '@/db/useNotes';
 import { splitCapture } from '@/notes/capture';
 import { greeting, longDate } from '@/texts/dates';
@@ -21,6 +22,7 @@ import { colors, font, space, TOUCH, type } from '@/theme';
 export default function Home() {
   const { username } = useAccount();
   const toast = useToast();
+  const draft = useCaptureDraft();
   const [data] = useNotesQuery(
     async (repo) => ({ pinned: await repo.pinned(), recent: await repo.recent() }),
     { pinned: [], recent: [] },
@@ -30,12 +32,13 @@ export default function Home() {
   const pairs = [];
   for (let i = 0; i < data.pinned.length; i += 2) pairs.push(data.pinned.slice(i, i + 2));
 
+  /** Bouton « + » : champ vide, une note vide s'ouvre dans l'éditeur (lot 1.1). */
   async function capture(text: string) {
     const parts = splitCapture(text);
-    if (!parts) return;
     const repo = await openNotes();
-    const note = await repo.create({ title: parts.title, body: parts.body });
-    if (parts.openEditor) router.push({ pathname: '/note/[id]', params: { id: note.id, mode: 'write' } });
+    const note = await repo.create(parts ? { title: parts.title, body: parts.body } : {});
+    await draft.clear();
+    if (!parts || parts.openEditor) router.push({ pathname: '/note/[id]', params: { id: note.id, mode: 'write' } });
     else notesChanged();
   }
 
@@ -81,7 +84,7 @@ export default function Home() {
 
         <BackupProblem />
         <InsightCard text={t.home.insightWaiting} />
-        <QuickCapture onSubmit={capture} />
+        <QuickCapture value={draft.text} onChangeText={draft.change} onSubmit={capture} />
 
         {data.pinned.length > 0 && (
           <View style={styles.section}>

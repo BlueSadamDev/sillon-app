@@ -18,22 +18,34 @@ export function SectionLabel({ children }: { children: string }) {
   );
 }
 
-/** Champ de capture rapide : le premier geste de l'accueil. */
-export function QuickCapture({ onSubmit }: { onSubmit: (text: string) => Promise<void> }) {
-  const [text, setText] = useState('');
+/**
+ * Champ de capture rapide : le premier geste de l'accueil. Le texte est tenu par l'écran (brouillon
+ * gardé, lot 1.1) ; le bouton « + » envoie le texte, même vide (une note vide s'ouvre alors).
+ */
+export function QuickCapture({
+  value,
+  onChangeText,
+  onSubmit,
+}: {
+  value: string;
+  onChangeText: (text: string) => void;
+  onSubmit: (text: string) => Promise<void>;
+}) {
   const [busy, setBusy] = useState(false);
   async function submit() {
-    if (busy || text.trim().length === 0) return;
+    if (busy) return;
     setBusy(true);
-    await onSubmit(text);
-    setText('');
-    setBusy(false);
+    try {
+      await onSubmit(value);
+    } finally {
+      setBusy(false);
+    }
   }
   return (
     <View style={styles.capture}>
       <TextInput
-        value={text}
-        onChangeText={setText}
+        value={value}
+        onChangeText={onChangeText}
         placeholder={t.home.capturePlaceholder}
         placeholderTextColor={colors.inkMuted}
         accessibilityLabel={t.home.capturePlaceholder}

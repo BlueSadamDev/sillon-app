@@ -225,11 +225,24 @@ describe('base des notes', () => {
     }
   });
 
-  it('efface toutes les notes', async () => {
+  it('garde le brouillon de la capture à part des notes, et l’efface', async () => {
+    const { repo } = await setup();
+    expect(await repo.captureDraft()).toBe('');
+    await repo.setCaptureDraft('Idée en cours');
+    await repo.setCaptureDraft('Idée en cours\nsuite');
+    expect(await repo.captureDraft()).toBe('Idée en cours\nsuite');
+    expect(await repo.exportAll()).toEqual([]);
+    await repo.setCaptureDraft('');
+    expect(await repo.captureDraft()).toBe('');
+  });
+
+  it('efface toutes les notes et le brouillon', async () => {
     const { repo } = await setup();
     await repo.create(FAKE_NOTES.jardin);
+    await repo.setCaptureDraft('brouillon fictif');
     await repo.wipe();
     expect(await repo.recent()).toEqual([]);
     expect(await repo.search('jardin')).toEqual([]);
+    expect(await repo.captureDraft()).toBe('');
   });
 });

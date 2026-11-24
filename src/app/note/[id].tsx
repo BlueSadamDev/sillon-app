@@ -304,6 +304,7 @@ export default function NoteScreen() {
                   placeholderTextColor={colors.inkMuted}
                   accessibilityLabel={t.note.titlePlaceholder}
                   multiline
+                  autoFocus={draft.title === '' && draft.body === ''}
                   submitBehavior="submit"
                   onSubmitEditing={() => bodyRef.current?.focus()}
                   style={[type.noteTitle, styles.titleInput]}
