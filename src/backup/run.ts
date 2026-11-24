@@ -11,7 +11,15 @@ import { encryptWithKey } from './cipher';
 import { parseConfig } from './config';
 import { folderOps, waitMs } from './device';
 import { buildPayload } from './payload';
-import { BACKUP_CONFIG_KEY, BACKUP_KEEP, BACKUP_STATE_KEY, DELETE_DELAY_MS, VERIFY_DELAY_MS } from './settings';
+import {
+  ACCESS_RETRIES,
+  ACCESS_RETRY_DELAY_MS,
+  BACKUP_CONFIG_KEY,
+  BACKUP_KEEP,
+  BACKUP_STATE_KEY,
+  DELETE_DELAY_MS,
+  VERIFY_DELAY_MS,
+} from './settings';
 import { sodiumEngine } from './sodium';
 import {
   afterAccessCheck,
@@ -21,7 +29,7 @@ import {
   type BackupStatus,
   parseStatus,
 } from './status';
-import { type FolderOps, rotateVerified, writeVerified } from './write';
+import { folderReachable, rotateVerified, writeVerified } from './write';
 
 export type RunOutcome = { ok: true } | { ok: false; problem: BackupProblem | 'busy' | 'not-configured' | 'not-due' };
 
@@ -33,17 +41,26 @@ async function writeStatus(next: BackupStatus): Promise<void> {
   await secureStore.set(BACKUP_STATE_KEY, JSON.stringify(next));
 }
 
+async function readConfig() {
+  return parseConfig(await secureStore.get(BACKUP_CONFIG_KEY).catch(() => null));
+}
+
 /**
  * Vérification légère de l'accès au dossier (lecture de la liste, sans écrire) : note le problème
- * « dossier inaccessible », ou l'efface quand l'accès est revenu.
+ * « dossier inaccessible », ou l'efface quand l'accès est revenu. Plusieurs essais avant de conclure.
+ * Si le dossier a été rechoisi pendant la vérification, le résultat (qui porte sur l'ancien) est ignoré.
  */
-async function checkAccess(ops: FolderOps, status: BackupStatus): Promise<void> {
-  const lost = await ops.names().then(
-    () => false,
-    () => true,
-  );
-  const next = afterAccessCheck(status, lost, Date.now());
+async function checkAccess(folderUri: string): Promise<void> {
+  const reachable = await folderReachable(folderOps(folderUri), ACCESS_RETRIES, waitMs(ACCESS_RETRY_DELAY_MS));
+  if ((await readConfig()).folder?.uri !== folderUri) return;
+  const next = afterAccessCheck(await readStatus(), !reachable, Date.now());
   if (next) await writeStatus(next);
+}
+
+/** Vérifie l'accès au dossier choisi (après un nouveau choix de dossier, par exemple). */
+export async function checkFolderAccess(): Promise<void> {
+  const config = await readConfig();
+  if (config.folder) await checkAccess(config.folder.uri);
 }
 
 // Une seule action à la fois dans le dossier pCloud (écran, ouverture et tâche de fond confondus).
@@ -58,7 +75,7 @@ export async function runBackup(auto: boolean): Promise<RunOutcome> {
   if (busy) return { ok: false, problem: 'busy' };
   busy = true;
   try {
-    const config = parseConfig(await secureStore.get(BACKUP_CONFIG_KEY).catch(() => null));
+    const config = await readConfig();
     if (!config.folder || !config.key) return { ok: false, problem: 'not-configured' };
     let status = await readStatus();
     const now = new Date();
@@ -66,7 +83,7 @@ export async function runBackup(auto: boolean): Promise<RunOutcome> {
       if (!autoBackupDue(true, status, now)) {
         // Pas de sauvegarde à faire : on vérifie quand même que le dossier reste accessible
         // (permission perdue, app pCloud désinstallée ou déconnectée, téléphone redémarré).
-        await checkAccess(folderOps(config.folder.uri), status);
+        await checkAccess(config.folder.uri);
         return { ok: false, problem: 'not-due' };
       }
       status = { ...status, lastAutoAttemptAt: now.getTime() };

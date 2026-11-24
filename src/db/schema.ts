@@ -40,6 +40,14 @@ const MIGRATIONS: string[] = [
   ALTER TABLE notes ADD COLUMN author_id TEXT;
   ALTER TABLE notes ADD COLUMN device_id TEXT;
   `,
+  // Version 4 : réglages et états propres au téléphone, hors des notes et hors de la sauvegarde
+  // (lot 1.1 : brouillon de la capture rapide).
+  `
+  CREATE TABLE local_state (
+    key TEXT PRIMARY KEY NOT NULL,
+    value TEXT NOT NULL
+  );
+  `,
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;

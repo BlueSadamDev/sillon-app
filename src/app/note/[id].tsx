@@ -1,6 +1,8 @@
 // Note (DESIGN.md, « Écrans du lot 1 », n° 6) : en-tête (retour, chemin, menu « … »), titre,
 // tags et date de modification, corps en mode écriture ou lecture, barre d'outils Markdown.
-// Enregistrement automatique, sans bouton.
+// Enregistrement automatique ; bascule « Lire » / « Écrire » dans l'en-tête et « Enregistrer » dans la
+// barre d'outils (lot 1.1).
+import * as Clipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -23,10 +25,12 @@ import { notesChanged } from '@/db/events';
 import { openNotes } from '@/db/expoDb';
 import type { NoteWithCount } from '@/db/notesRepo';
 import { applyAction, continueList, type Action, type Selection } from '@/editor/format';
+import { toggleTaskAt } from '@/editor/markdownPrep';
 import { MarkdownView } from '@/editor/MarkdownView';
 import { SAVE_DELAY_MS } from '@/editor/settings';
 import { Toolbar } from '@/editor/Toolbar';
 import { useKeyboardVisible } from '@/editor/useKeyboardVisible';
+import { noteMarkdown } from '@/notes/markdown';
 import { extractTags } from '@/notes/tags';
 import { buildTree, descendantIds, pathOf, type TreeNode } from '@/notes/tree';
 import { modifiedWhen } from '@/texts/dates';
@@ -148,6 +152,19 @@ export default function NoteScreen() {
     router.push({ pathname: '/note/[id]', params: { id: target.id } });
   }, []);
 
+  /** Mode lecture : toucher une case la coche ou la décoche, et enregistre tout de suite (lot 1.1). */
+  const onToggleTask = useCallback(
+    (line: number) => {
+      const d = latest.current;
+      const body = toggleTaskAt(d.body, line);
+      if (body === d.body) return;
+      latest.current = { ...d, body };
+      setDraft(latest.current);
+      save();
+    },
+    [save],
+  );
+
   async function togglePin() {
     setMenu('none');
     await (await openNotes()).setPinned(id, !pinned);
@@ -160,6 +177,18 @@ export default function NoteScreen() {
     Keyboard.dismiss();
     await save();
     router.back();
+  }
+
+  function toggleMode() {
+    save();
+    setMode(mode === 'write' ? 'read' : 'write');
+  }
+
+  /** Menu « … » : copie la note entière en Markdown dans le presse-papiers (lot 1.1). */
+  async function copyAll() {
+    setMenu('none');
+    await Clipboard.setStringAsync(noteMarkdown(latest.current));
+    toast({ message: t.note.copied });
   }
 
   async function toggleArchive() {
@@ -250,12 +279,12 @@ export default function NoteScreen() {
         <Text style={[type.small, styles.path]} numberOfLines={1}>
           {path.length > 0 ? [...path.map((n) => n.title || t.note.untitled), draft.title || t.note.untitled].join(' › ') : ''}
         </Text>
-        {loaded && mode === 'write' && (
+        {loaded && (
           <Pressable
             accessibilityRole="button"
-            onPress={saveAndClose}
-            style={({ pressed }) => [styles.saveButton, pressed && styles.dim]}>
-            <Text style={styles.saveText}>{t.note.save}</Text>
+            onPress={toggleMode}
+            style={({ pressed }) => [styles.toggle, pressed && styles.pressed]}>
+            <Text style={styles.toggleText}>{mode === 'write' ? t.note.read : t.note.write}</Text>
           </Pressable>
         )}
         <Pressable accessibilityRole="button" accessibilityLabel={t.note.menu} onPress={() => setMenu('actions')} style={styles.icon}>
@@ -275,6 +304,7 @@ export default function NoteScreen() {
                   placeholderTextColor={colors.inkMuted}
                   accessibilityLabel={t.note.titlePlaceholder}
                   multiline
+                  autoFocus={draft.title === '' && draft.body === ''}
                   submitBehavior="submit"
                   onSubmitEditing={() => bodyRef.current?.focus()}
                   style={[type.noteTitle, styles.titleInput]}
@@ -298,23 +328,20 @@ export default function NoteScreen() {
             </View>
           ) : (
             <View style={styles.fill}>
-              <MarkdownView value={draft.body} onNoteLink={onNoteLink} header={header} />
+              <MarkdownView value={draft.body} onNoteLink={onNoteLink} onToggleTask={onToggleTask} header={header} />
             </View>
           )}
-          <Toolbar
-            mode={mode}
-            onAction={onAction}
-            onToggle={() => {
-              save();
-              setMode(mode === 'write' ? 'read' : 'write');
-            }}
-            bottom={keyboard ? 0 : insets.bottom}
-          />
+          {mode === 'write' ? (
+            <Toolbar onAction={onAction} onSave={saveAndClose} bottom={keyboard ? 0 : insets.bottom} />
+          ) : (
+            <View style={{ height: insets.bottom }} />
+          )}
         </KeyboardAvoidingView>
       )}
 
       <Sheet visible={menu === 'actions'} onClose={() => setMenu('none')}>
         <SheetItem label={pinned ? t.note.unpin : t.note.pin} onPress={togglePin} />
+        <SheetItem label={t.note.copyAll} onPress={copyAll} />
         <SheetItem label={t.note.newChild} onPress={newChild} />
         <SheetItem label={t.note.move} onPress={() => setMenu('move')} />
         <SheetItem label={archived ? t.note.unarchive : t.note.archive} onPress={toggleArchive} />
@@ -360,16 +387,19 @@ const styles = StyleSheet.create({
   headerBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, gap: 4 },
   icon: { width: TOUCH, height: TOUCH, alignItems: 'center', justifyContent: 'center' },
   path: { flex: 1, textAlign: 'center' },
-  saveButton: {
+  // Bouton secondaire (DESIGN.md) : contour line, fond surface, texte ink.
+  toggle: {
     minHeight: TOUCH,
     paddingHorizontal: 14,
     borderRadius: radius.chip,
-    backgroundColor: colors.accent,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  saveText: { ...font('bold'), fontSize: 14, color: colors.onAccent },
-  dim: { opacity: 0.7 },
+  toggleText: { ...font('bold'), fontSize: 14, color: colors.ink },
+  pressed: { backgroundColor: colors.surfaceAlt },
   writeHead: { paddingHorizontal: space.screenNote, gap: 4 },
   titleInput: { padding: 0, paddingVertical: 4 },
   meta: { gap: 8, paddingBottom: 12 },

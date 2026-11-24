@@ -16,6 +16,22 @@ export interface FolderOps {
   remove(name: string): Promise<void>;
 }
 
+/**
+ * Le dossier répond-il ? pCloud peut ne pas répondre à la première demande (app pCloud endormie) :
+ * on ne conclut à un accès perdu qu'après plusieurs essais espacés.
+ */
+export async function folderReachable(ops: FolderOps, retries: number, wait: () => Promise<void>): Promise<boolean> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await ops.names();
+      return true;
+    } catch {
+      if (attempt >= retries) return false;
+      await wait();
+    }
+  }
+}
+
 export type WriteResult = { ok: true; name: string; reportedError: boolean } | { ok: false; problem: BackupProblem };
 
 export async function writeVerified(

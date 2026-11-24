@@ -17,3 +17,6 @@ export const TAG_MAX_LENGTH = 40;
 
 /** Délai entre la dernière frappe et le lancement de la recherche (en millisecondes). */
 export const SEARCH_DELAY_MS = 150;
+
+/** Délai entre la dernière frappe dans la capture rapide et l'enregistrement du brouillon (ms). */
+export const CAPTURE_DRAFT_DELAY_MS = 400;

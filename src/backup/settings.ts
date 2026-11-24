@@ -45,6 +45,13 @@ export const DELETE_DELAY_MS = 5000;
 /** Attente entre le déverrouillage et la sauvegarde automatique (l'accueil s'affiche d'abord). */
 export const AUTO_START_DELAY_MS = 2000;
 
+/**
+ * Vérification de l'accès au dossier : nombre de nouveaux essais, et attente entre deux, avant de
+ * signaler « Sillon n'a plus accès » (une seule réponse manquée de pCloud n'est pas une perte d'accès).
+ */
+export const ACCESS_RETRIES = 2;
+export const ACCESS_RETRY_DELAY_MS = 3000;
+
 /** Après une sauvegarde automatique ratée, délai avant une nouvelle tentative automatique (minutes). */
 export const AUTO_RETRY_AFTER_MIN = 60;
 

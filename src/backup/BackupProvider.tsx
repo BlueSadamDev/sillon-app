@@ -10,7 +10,7 @@ import { afterPaint, secureStore } from '@/account/device';
 
 import { createBackupKey } from './cipher';
 import { type BackupConfig, EMPTY_CONFIG, folderDisplayName, isConfigured, parseConfig, serializeConfig } from './config';
-import { readStatus, runBackup, type RunOutcome } from './run';
+import { checkFolderAccess, readStatus, runBackup, type RunOutcome } from './run';
 import { AUTO_START_DELAY_MS, BACKUP_CONFIG_KEY, BACKUP_KDF, BACKUP_KDF_FALLBACK, BACKUP_STATE_KEY } from './settings';
 import { sodiumEngine } from './sodium';
 import { cancelBackgroundBackup, scheduleBackgroundBackup } from './task';
@@ -140,6 +140,9 @@ export function BackupProvider({ children }: { children: ReactNode }) {
           await secureStore.set(BACKUP_STATE_KEY, JSON.stringify(next));
           setStatus(next);
         }
+        // Puis on vérifie tout de suite que le nouveau dossier répond.
+        await checkFolderAccess();
+        await refresh();
         return true;
       },
 

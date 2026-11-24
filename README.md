@@ -4,12 +4,15 @@ Application Android personnelle de prise de notes en Markdown. Une IA locale en 
 Tout se passe sur le téléphone : seule une sauvegarde chiffrée sort, dans un dossier pCloud.
 Référence : [docs/CAHIER_DES_CHARGES.md](docs/CAHIER_DES_CHARGES.md).
 
-## État actuel : lot 2 (sauvegarde), en test
+## État actuel : lot 1.1 (confort d'écriture), testé
 
 - Compte local créé au premier lancement (seule l'empreinte du mot de passe est gardée, dans le coffre
   sécurisé du téléphone), déverrouillage par empreinte digitale ou mot de passe, délai de verrouillage réglable.
 - Accueil : capture rapide, notes épinglées et récentes, emplacement du « Sillon de la semaine » (lot 4).
 - Éditeur Markdown (barre d'outils, mode lecture, enregistrement automatique et bouton « Enregistrer », liens `[[ ]]`, tags `#mot`).
+- Confort d'écriture (lot 1.1) : « Enregistrer » au-dessus du clavier, « Lire » / « Écrire » en haut ; cases à
+  cocher touchables en mode lecture ; « Copier tout le texte » (menu « … ») ; « + » avec un champ vide ouvre
+  une note vide ; le brouillon de la capture rapide est gardé.
 - Pages : arborescence des notes et sous-notes, corbeille de 30 jours.
 - Recherche par mots (sans accents, par début de mot).
 - Archives (glisser une note de l’accueil vers la gauche) et corbeille (vers la droite).
