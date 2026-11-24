@@ -14,6 +14,7 @@
   - `src/db/` : base de données locale (SQLite) ;
   - `src/account/` : compte local, mot de passe, déverrouillage ;
   - `src/backup/` : chiffrement, écriture dans le dossier pCloud, rotation, restauration ;
+  - `src/share/` : partage simple d'une note (lot 2.1) : texte, fichier Markdown, PDF ;
   - `src/ai/` : IA locale (lot 3 et suivants) : modèles, embeddings, insights, gardien des réponses ;
   - `src/components/` : composants d'interface réutilisables ;
   - `src/texts/` : tous les textes affichés (charte dans DESIGN.md).
