@@ -105,7 +105,7 @@ Le lot 7.0 vérifie que `react-native-libsodium` 1.7.0 fournit bien ces fonction
 | **Clé de coffre** (32 octets tirés au sort) | Coffre sécurisé de chaque appareil (`expo-secure-store`) | Chiffre toutes les notes synchronisées |
 | **Paire de clés d'appareil** (signature + boîte) | Coffre sécurisé de l'appareil, jamais copiée | Signer les messages ; recevoir la clé de coffre |
 | **Clé de secours** (24 mots en français) | Papier, chez toi | Retrouver la clé de coffre si tous les appareils sont perdus |
-| Mot de passe de sauvegarde (lot 2) | Inchangé | Sauvegarde pCloud |
+| Clé de sauvegarde (lot 2) | Coffre sécurisé du téléphone désigné | Chiffre la sauvegarde ; au lot 7, elle est **tirée de la clé de secours** au lieu du mot de passe de sauvegarde |
 
 La clé de coffre porte un **numéro d'époque** : quand elle change (appareil retiré), les nouveaux messages utilisent la nouvelle, et les appareils gardent les anciennes pour relire l'historique.
 
@@ -136,6 +136,12 @@ Pas de mot de passe sur le relais : à chaque connexion, le relais envoie un dé
 
 ### 5.6 Tout perdu
 Nouveau téléphone + clé de secours → Sillon retrouve la clé de coffre. Le relais exige toutefois un appareil autorisé : la remise à zéro de la liste des appareils se fait par une **commande sur le mini PC**. À défaut de relais, la sauvegarde pCloud permet de tout restaurer.
+
+### 5.7 Une seule clé de secours
+- La clé de secours de 24 mots est la racine de tout : la clé de coffre et la clé de sauvegarde en sont tirées (fonction de dérivation de libsodium, une étiquette différente pour chacune).
+- **Une seule feuille de papier** permet donc de retrouver à la fois les notes synchronisées et les sauvegardes.
+- Le mot de passe de sauvegarde du lot 2 disparaît. Les sauvegardes déjà faites restent lisibles avec lui : le format du fichier porte un numéro de version et indique comment la clé a été obtenue.
+- Pourquoi pas une clé rangée seulement dans le coffre-fort d'Android : une telle clé ne sort jamais du téléphone ; s'il est perdu, la sauvegarde deviendrait illisible au moment où on en a besoin.
 
 ## 6. Données et fusion
 

@@ -1,7 +1,7 @@
 # Cahier des charges – Sillon
 
 Nom de l'app : **Sillon** (application de notes personnelle avec IA locale).
-Version : 0.9 (24 novembre 2026). Changements par rapport à la 0.8 : synchronisation entre le téléphone et une tablette Android par un relais sur le mini PC via Tailscale (lots 7.0, 7 et 7.1), collaboration à plusieurs (lot 8), d'après `docs/ETUDE_SYNCHRONISATION.md`.
+Version : 0.9 (24 novembre 2026). Changements par rapport à la 0.8 : synchronisation entre le téléphone et une tablette Android par un relais sur le mini PC via Tailscale (lots 7.0, 7 et 7.1), collaboration à plusieurs (lot 8), d'après `docs/ETUDE_SYNCHRONISATION.md` ; destination de sauvegarde au choix (lot 2.2) ; clé de secours unique pour le coffre et la sauvegarde (lot 7) ; sauvegarde automatique d'Android désactivée (section 6).
 Version 0.8 (24 novembre 2026). Changements par rapport à la 0.7 : accès au dossier pCloud déclaré perdu seulement après plusieurs essais espacés (F7), choix du lot 2.1 pour le partage simple (F10).
 Version 0.7 (24 novembre 2026). Changements par rapport à la 0.6 : auteur et appareil précisés (3.1), vérifications pCloud du lot 2 (section 8).
 Version 0.6 (23 novembre 2026). Changements par rapport à la 0.5 : retours du premier usage (lot 1.1 : cases à cocher dans les deux modes, copie du texte, bouton « + », brouillon de la capture, boutons « Lire » et « Enregistrer » intervertis), dictée vocale locale (F11, lot 6), partage simple d'une note (F10, lot 2.1), préparation des données au partage et à la collaboration (3.1), feuille de route du partage à long terme (section 7, « Plus tard »).
@@ -106,6 +106,13 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 - **Restauration** : choisir un fichier, saisir le mot de passe, aperçu (date, nombre de notes), confirmation, remplacement des données.
 - **En cas d'échec** (dossier inaccessible, app pCloud déconnectée, permission perdue) : message clair sur l'accueil et dans Compte, avec le bouton pour rechoisir le dossier. L'accès au dossier n'est déclaré perdu qu'après **plusieurs essais espacés** de quelques secondes (une seule réponse manquée de pCloud n'est pas une perte d'accès) ; les réglages sont dans `src/backup/settings.ts`.
 - **Solution de repli** si l'écriture directe dans pCloud ne marche pas : export du fichier chiffré puis partage vers l'app pCloud.
+- **Destination au choix (lot 2.2)** : la sauvegarde n'est plus liée à pCloud.
+  - L'écran parle de « dossier de sauvegarde ». N'importe quel service qui accepte le choix d'un dossier dans le sélecteur d'Android convient : pCloud (testé), carte SD, clé USB, Nextcloud, OneDrive, Proton Drive… (à vérifier service par service au début du lot).
+  - Sillon reconnaît le service choisi et adapte ses délais et vérifications ; les précautions prises pour pCloud (une action à la fois, vérification par la liste du dossier, nom en `.bin`) deviennent le comportement par défaut.
+  - **Mémoire interne du téléphone** : acceptée, avec un avertissement clair (« Cette sauvegarde ne te protège pas si tu perds ton téléphone »).
+  - **Google Drive et Dropbox** ne permettent pas de choisir un dossier : mode manuel « Enregistrer une copie dans… », qui crée un fichier chiffré à l'endroit choisi à chaque fois (pas de sauvegarde automatique ni de rotation).
+  - À partir du lot 7 : **deuxième destination possible sur le mini PC** (fichier chiffré déposé auprès du relais), pour avoir une copie à la maison et une dans le cloud.
+- **Clé de sauvegarde** : la clé calculée à la configuration est rangée dans `expo-secure-store`, protégé par le coffre-fort matériel d'Android (Keystore) ; c'est ce qui permet la sauvegarde automatique sans saisir le mot de passe. Le mot de passe ne sert qu'à restaurer sur un autre appareil. Au lot 7, il est remplacé par la clé de secours de 24 mots (voir lot 7).
 
 ### F8 – Remise en forme d'une note (lot 4.1)
 - Deux boutons distincts dans le menu « … » d'une note :
@@ -154,7 +161,7 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 ## 6. Exigences non fonctionnelles
 
 - **Confidentialité** : aucun SDK d'analytics, de suivi des plantages ni de publicité. APK de production sans permission Internet. Aucune vraie note dans le dépôt (public) : tests sur notes fictives uniquement. Pas de contenu de notes dans les logs.
-- **Sécurité** : notes dans la base locale de l'app (espace privé, chiffré par Android) ; app verrouillée ; sauvegarde toujours chiffrée ; un export en clair seulement sur demande explicite.
+- **Sécurité** : notes dans la base locale de l'app (espace privé, chiffré par Android) ; app verrouillée ; sauvegarde toujours chiffrée ; un export en clair seulement sur demande explicite. **Sauvegarde automatique d'Android désactivée** (`android.allowBackup: false`) : sinon Android peut copier la base de Sillon, notes comprises, vers le compte Google, sans passer par Sillon ni par la permission Internet. Le build de production vérifie que l'APK la désactive bien.
 - **Performance** : ouverture en moins de 2 s, capture rapide immédiate, recherche par mots instantanée jusqu'à quelques milliers de notes.
 - **Téléphone** : Android 14 ou plus récent ; IA validée sur Samsung Galaxy S21 (8 Go).
 - Les textes de l'app suivent la charte d'écriture du DESIGN.md.
@@ -170,6 +177,7 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 - **Lot 2 – Sauvegarde** : sauvegarde chiffrée vers le dossier pCloud (configuration, automatique, rotation), restauration testée, état sur l'accueil, export en clair (ZIP).
 - **Lot 1.1 – Confort d'écriture** (retours du premier usage, à faire juste après la fusion du lot 2 pour éviter les conflits) : cases à cocher dans les deux modes, copie du texte, « + » qui ouvre une note vide, brouillon de la capture gardé, boutons « Lire » et « Enregistrer » intervertis.
 - **Lot 2.1 – Partage simple** (F10) : partage d'une note ou d'une page en texte, Markdown ou PDF par le menu de partage d'Android.
+- **Lot 2.2 – Destination de sauvegarde au choix** (F7) : vocabulaire neutre, réglage par service, avertissement pour la mémoire interne, mode manuel pour Google Drive et Dropbox, tests sur les services disponibles.
 - **Lot 3 – Recherche par le sens** : embeddings, notes liées, recherche par le sens.
 - **Lot 4 – Insights** : import du modèle, résumés et tags proposés, questions sur ses notes, bilan de la semaine, carte d'insight sur l'accueil.
 - **Lot 4.1 – Remise en forme** (F8) : « Corriger les fautes », puis « Mettre en forme », avec comparaison avant / après, annulation et gardien.
@@ -179,7 +187,7 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
   - 5c : vue « Ma semaine ».
 - **Lot 6 – Dictée vocale locale** (F11) : d'abord un banc d'essai (taille et vitesse des modèles Whisper sur le S21, qualité en français, cohabitation avec le modèle de rédaction en mémoire), puis le bouton micro dans la capture et l'éditeur.
 - **Lot 7.0 – Faisabilité de la synchronisation** (étude, section 14) : relais prototype sur le Z83-F via Tailscale, Yjs et branchement de l'éditeur, fonctions libsodium (signatures, boîtes scellées), appairage par QR code, tâche de fond et batterie. Rapport dans `docs/RAPPORT_LOT_7_0.md`.
-- **Lot 7 – Duo téléphone et tablette** : installation du relais, clé de coffre, appairage par QR code et quatre mots de vérification, clé de secours, écran « Mes appareils » (retrait, effacement à distance), migration des notes vers Yjs, synchronisation, historique des versions, test `networkGuard`, banc de chaos, sauvegarde depuis l'appareil désigné.
+- **Lot 7 – Duo téléphone et tablette** : installation du relais, clé de coffre, appairage par QR code et quatre mots de vérification, **clé de secours unique** (24 mots dont sont tirées la clé de coffre et la clé de sauvegarde, qui remplace le mot de passe de sauvegarde ; les anciennes sauvegardes restent lisibles avec l'ancien mot de passe), écran « Mes appareils » (retrait, effacement à distance), migration des notes vers Yjs, synchronisation, historique des versions, test `networkGuard`, banc de chaos, sauvegarde depuis l'appareil désigné.
 - **Lot 7.1 – Écran tablette** : affichage en deux colonnes (liste à gauche, note à droite).
 - **Lot 8 – Collaboration** (étude, section 11) : identités, espaces partagés avec leur propre clé, invitations, droits lecture / écriture appliqués par signature, présence, commentaires, règle IA, cadrage des données personnelles. Complément au cahier des charges à écrire avant le lot.
 - **Ordre retenu** (24 novembre 2026) : lots 7.0 et 7 juste après le lot 3, avant les lots 4, 4.1 et 5. Mini PC sous Debian ; sauvegarde pCloud faite par le téléphone (étude, section 13).
@@ -191,7 +199,8 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 - **pCloud comme dossier Android** : **confirmé** : écriture directe et envoi complet dans le cloud (lot 0) ; accès conservé après un redémarrage et suppressions espacées (lot 2). Reste à vérifier : la relecture d'une sauvegarde déjà envoyée (test 7 du lot 2).
 - **Réponses de pCloud peu fiables** : pCloud peut signaler une erreur sur une écriture ou une suppression réussie, et refuse les actions trop rapprochées. Parade : une action à la fois et vérification par la liste du dossier.
 - **Tâche de fond et dossier pCloud** : l'écriture en arrière-plan peut échouer si l'app pCloud est endormie ; la sauvegarde à l'ouverture de l'app sert de filet.
-- **Mot de passe de sauvegarde perdu** = sauvegardes illisibles. Avertissement obligatoire.
+- **Mot de passe de sauvegarde perdu** = sauvegardes illisibles. Avertissement obligatoire. Une clé rangée uniquement dans le coffre-fort d'Android ne peut pas sortir du téléphone : elle ne remplace pas un moyen de récupération hors du téléphone (mot de passe aujourd'hui, clé de secours au lot 7).
+- **Destinations de sauvegarde (lot 2.2)** : chaque service se comporte différemment dans le sélecteur d'Android (écritures, suppressions, délais). Seuls les services testés sont annoncés comme compatibles.
 - **Perte du téléphone sans sauvegarde récente** = perte des notes depuis la dernière sauvegarde.
 - **Qualité des insights** avec un modèle de 1,2 milliard de paramètres : fragile sur la synthèse de textes libres. À mesurer au lot 4 sur notes fictives.
 - **Remise en forme (F8)** : un modèle de 1,2 milliard de paramètres peut retirer ou modifier du contenu. Le gardien et la comparaison avant / après sont obligatoires ; mesurer au lot 4.1 sur notes fictives le taux de propositions refusées par le gardien.

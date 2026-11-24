@@ -27,6 +27,7 @@
 - Ne jamais mettre de vraies notes dans le dépôt (dépôt **public**) : ni exports, ni captures, ni logs. Les tests utilisent uniquement des **notes fictives** (`src/**/__fixtures__/`).
 - Ne jamais afficher le contenu des notes ni un mot de passe dans les logs (`console.log`).
 - Un export **en clair** n'a lieu que sur demande explicite de l'utilisateur, avec un avertissement.
+- **Sauvegarde automatique d'Android désactivée** : `android.allowBackup` reste à `false` dans `app.json` (sinon Android peut copier la base, notes comprises, vers le compte Google, sans passer par la permission Internet). Le workflow de production vérifie l'APK final.
 
 ## Compte local
 - Un seul compte, créé au premier lancement, **stocké sur le téléphone**. Le mot de passe n'est conservé que sous forme d'empreinte (Argon2id ou scrypt), dans `expo-secure-store`.
@@ -40,6 +41,7 @@
 - La restauration est testée à chaque modification du format de sauvegarde (test automatique : sauvegarder des notes fictives, restaurer, comparer).
 - Le format du fichier porte un numéro de version, pour pouvoir relire les anciennes sauvegardes.
 - Gérer proprement les cas « dossier inaccessible », « permission perdue », « app pCloud absente », avec un message clair et le bouton pour rechoisir le dossier.
+- À partir du lot 2.2, la destination n'est plus forcément pCloud (cahier des charges, F7 « Destination au choix ») : écrire le code de la sauvegarde sans rien supposer de propre à pCloud, sauf dans le réglage par service.
 
 ## Préparer le partage (sans le construire)
 - Le partage avec d'autres personnes et la collaboration sont possibles à long terme (cahier des charges, section 7, « Plus tard ») : **ne rien construire pour eux** (ni serveur, ni réseau, ni fusion automatique), mais ne pas se fermer la porte :
