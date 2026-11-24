@@ -1,7 +1,7 @@
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { AccountProvider, useAccount } from '@/account/AccountProvider';
 import { CreateAccount } from '@/account/ui/CreateAccount';
@@ -11,11 +11,14 @@ import { BackupProvider } from '@/backup/BackupProvider';
 import { OfferBackup } from '@/backup/ui/OfferBackup';
 import { StartupScreen } from '@/components/StartupScreen';
 import { ToastProvider } from '@/components/Toast';
+import { clearSharedFiles } from '@/share/send';
 import { t } from '@/texts/fr';
 import { colors, FONT_FILES } from '@/theme';
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(FONT_FILES);
+  // Copies laissées par un partage précédent (F10) : effacées à l'ouverture de l'app.
+  useEffect(clearSharedFiles, []);
   return (
     <AccountProvider>
       <BackupProvider>
@@ -52,6 +55,7 @@ function Gate() {
           <Stack.Screen name="mot-de-passe" options={{ headerShown: false }} />
           <Stack.Screen name="sauvegarde" options={{ headerShown: false }} />
           <Stack.Screen name="restaurer" options={{ headerShown: false }} />
+          <Stack.Screen name="partager" options={{ headerShown: false }} />
           <Stack.Screen name="essais" options={{ title: t.benches.title }} />
           <Stack.Screen name="essai-pcloud" options={{ title: t.pcloud.title }} />
           <Stack.Screen name="essai-chiffrement" options={{ title: t.crypto.title }} />

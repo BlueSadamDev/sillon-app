@@ -191,6 +191,13 @@ export default function NoteScreen() {
     toast({ message: t.note.copied });
   }
 
+  /** Menu « … » : partager la note (F10, lot 2.1). La dernière version tapée est enregistrée d'abord. */
+  async function share() {
+    setMenu('none');
+    await save();
+    router.push({ pathname: '/partager', params: { id } });
+  }
+
   async function toggleArchive() {
     setMenu('none');
     await save();
@@ -342,6 +349,7 @@ export default function NoteScreen() {
       <Sheet visible={menu === 'actions'} onClose={() => setMenu('none')}>
         <SheetItem label={pinned ? t.note.unpin : t.note.pin} onPress={togglePin} />
         <SheetItem label={t.note.copyAll} onPress={copyAll} />
+        <SheetItem label={t.note.share} onPress={share} />
         <SheetItem label={t.note.newChild} onPress={newChild} />
         <SheetItem label={t.note.move} onPress={() => setMenu('move')} />
         <SheetItem label={archived ? t.note.unarchive : t.note.archive} onPress={toggleArchive} />

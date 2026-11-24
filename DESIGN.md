@@ -89,10 +89,14 @@ Contraste : tout texte atteint 4,5:1 sur son fond. **`accent` ne s'utilise jamai
 3. **Activer l'empreinte** : une phrase, bouton principal « Activer », bouton secondaire « Plus tard ».
 4. **Déverrouillage** : logo, « Bonjour » suivi de l'identifiant, demande d'empreinte automatique, bouton « Utiliser mon mot de passe ».
 5. **Accueil** : date (13 px `inkMuted`) et salutation ; à droite, pastille de sauvegarde (à partir du lot 2) et bouton rond du compte (initiale) ; carte d'insight ; champ de capture ; épinglées ; récentes ; barre de navigation.
-6. **Note** : en-tête avec retour, chemin de la page (« Parent › Note », 12 px `inkMuted`), bascule « Lire » / « Écrire » (bouton secondaire, depuis le lot 1.1 ; « Enregistrer » est passé dans la barre d'outils) et menu « … » (avec « Copier tout le texte » au lot 1.1) (épingler, ajouter une sous-note, déplacer, archiver, mettre à la corbeille) ; titre ; tags et date de modification ; corps ; barre d'outils Markdown en mode écriture.
+6. **Note** : en-tête avec retour, chemin de la page (« Parent › Note », 12 px `inkMuted`), bascule « Lire » / « Écrire » (bouton secondaire, depuis le lot 1.1 ; « Enregistrer » est passé dans la barre d'outils) et menu « … » (avec « Copier tout le texte » au lot 1.1 et « Partager » au lot 2.1) (épingler, ajouter une sous-note, déplacer, archiver, mettre à la corbeille) ; titre ; tags et date de modification ; corps ; barre d'outils Markdown en mode écriture.
 7. **Pages** : arborescence dépliable, bouton « Nouvelle page », archives puis corbeille en bas de liste.
 8. **Recherche** : champ en haut, résultats en lignes de note avec le mot trouvé en gras.
 9. **Compte** : groupes « Sécurité » (mot de passe, empreinte, délai de verrouillage), « Sauvegarde » (dossier pCloud, dernière sauvegarde, « Sauvegarder maintenant », « Restaurer » ; actif au lot 2), « Données » (exporter en clair, effacer toutes les données).
+
+## Écran du lot 2.1
+- **Partager la note** (menu « … » > « Partager ») : retour, titre « Partager la note » (30/700) ; libellé de section « Format » puis trois options (Texte, Fichier Markdown, PDF) en cartes `surface` à bordure `line`, rayon 12, cible ≥ 56 px, titre 15/500 et une phrase d'explication 13 px `inkMuted` ; l'option choisie a le fond `surfaceAlt` et une coche à droite. Si la note a des sous-notes : case à cocher (18 px, `accent`) « Inclure les N sous-notes ». Encadré `surface` avec le rappel en une phrase (copie non protégée, modifications non transmises), puis bouton principal « Partager », qui ouvre le menu de partage d'Android.
+- **PDF partagé** : mise en forme du mode lecture sur page A4 blanche (titre de la note 22 pt Bold, corps 11,5 pt Satoshi Regular, interligne 1,6, couleurs `ink` / `inkSoft` / `inkMuted`, cases en `accent`, citations avec le trait `#D9CFBB`) ; chaque sous-note commence sous un filet `line`, par son titre en 17 pt. Aucun élément d'interface.
 
 ## États à toujours prévoir
 - **Carnet vide** : sur l'accueil, la capture rapide et une phrase d'invitation à la place des récentes ; pas de section « Épinglées ».

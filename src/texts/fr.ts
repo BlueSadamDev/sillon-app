@@ -54,6 +54,7 @@ export const t = {
     unarchived: 'Note sortie des archives.',
     copyAll: 'Copier tout le texte',
     copied: 'Texte de la note copié.',
+    share: 'Partager',
     modified: (when: string) => `Modifiée ${when}`,
     tools: {
       heading: 'Titre',
@@ -249,6 +250,25 @@ export const t = {
     zipRoot: 'Sillon',
     zipArchives: 'Archives',
     zipTrash: 'Corbeille',
+    untitled: 'Sans titre',
+  },
+  share: {
+    title: 'Partager la note',
+    format: 'Format',
+    formats: {
+      text: { label: 'Texte', hint: 'Le texte de la note dans le message.' },
+      markdown: { label: 'Fichier Markdown', hint: 'Un fichier .md, lisible par la plupart des apps de notes.' },
+      pdf: { label: 'PDF', hint: 'La note mise en page, comme en mode lecture.' },
+    },
+    withChildren: (count: number) =>
+      count > 1 ? `Inclure les ${count}\u00a0sous-notes` : 'Inclure la sous-note',
+    withChildrenHint: 'Elles sont ajoutées à la suite, dans le même message ou le même fichier.',
+    warning:
+      'Le destinataire reçoit une copie non protégée de la note, et tes modifications suivantes ne lui parviendront pas.',
+    button: 'Partager',
+    preparing: 'Préparation…',
+    failed: 'Sillon n’a pas réussi à préparer le partage. Réessaie.',
+    failedPdf: 'Sillon n’a pas réussi à préparer le PDF. Réessaie.',
     untitled: 'Sans titre',
   },
   passwordScreen: {
