@@ -1,7 +1,8 @@
 # Cahier des charges – Sillon
 
 Nom de l'app : **Sillon** (application de notes personnelle avec IA locale).
-Version : 0.6 (23 novembre 2026). Changements par rapport à la 0.5 : retours du premier usage (lot 1.1 : cases à cocher dans les deux modes, copie du texte, bouton « + », brouillon de la capture, boutons « Lire » et « Enregistrer » intervertis), dictée vocale locale (F11, lot 6), partage simple d'une note (F10, lot 2.1), préparation des données au partage et à la collaboration (3.1), feuille de route du partage à long terme (section 7, « Plus tard »).
+Version : 0.7 (24 novembre 2026). Changements par rapport à la 0.6 : auteur et appareil précisés (3.1), vérifications pCloud du lot 2 (section 8).
+Version 0.6 (23 novembre 2026). Changements par rapport à la 0.5 : retours du premier usage (lot 1.1 : cases à cocher dans les deux modes, copie du texte, bouton « + », brouillon de la capture, boutons « Lire » et « Enregistrer » intervertis), dictée vocale locale (F11, lot 6), partage simple d'une note (F10, lot 2.1), préparation des données au partage et à la collaboration (3.1), feuille de route du partage à long terme (section 7, « Plus tard »).
 Version 0.5 (22 novembre 2026). Changements par rapport à la 0.4 : feuille de route complétée par la remise en forme des notes (F8, lot 4.1) et les actions (F9, lot 5).
 Version 0.4 (22 novembre 2026). Changements par rapport à la 0.3 (décisions du lot 1) : archive des notes, glissement sur l'accueil (corbeille, archive), bouton « Enregistrer » dans l'éditeur, carte d'insight au-dessus de la capture rapide, règle de la capture rapide, tags écrits `#mot`, export en clair reporté au lot 2.
 
@@ -30,7 +31,7 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 - Identifiant unique (UUID), titre, contenu en **Markdown**, note parente (pour imbriquer les pages), tags, épinglée oui/non.
 - **Tags** : écrits dans le texte sous la forme `#mot` ; l'app les reconnaît d'elle-même.
 - Dates de création et de modification.
-- **Préparation au partage** (rien à construire, voir CLAUDE.md) : chaque note garde aussi un **identifiant d'auteur** (celui du compte local) et l'appareil de la dernière modification ; toutes les modifications passent par `src/db/` ; le contenu d'une note ne contient aucun réglage propre au téléphone.
+- **Préparation au partage** (rien à construire, voir CLAUDE.md) : chaque note garde aussi un **identifiant d'auteur** : celui du compte qui l'a **créée**, il ne change plus ensuite (il est repris d'une sauvegarde restaurée sur un nouveau téléphone). Elle garde aussi l'**appareil de la dernière écriture**, noté à chaque écriture : modification, épingle, déplacement, archive, corbeille et leurs annulations. L'identifiant d'appareil est propre à chaque installation et n'est jamais sauvegardé. Toutes les modifications passent par `src/db/` ; le contenu d'une note ne contient aucun réglage propre au téléphone.
 - Suppression « douce » : une note supprimée va dans une corbeille pendant 30 jours.
 - **Archive** : une note archivée (avec ses sous-notes) quitte l'accueil (récentes, épinglées) mais reste dans Pages (« Archives ») et dans la recherche. Elle n'est jamais effacée toute seule et peut être sortie des archives.
 
@@ -186,7 +187,7 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 
 ## 8. Points ouverts et risques
 
-- **pCloud comme dossier Android** : **confirmé au lot 0** (écriture directe, fichiers arrivés complets dans le cloud). Restent à vérifier au lot 2 : accès après redémarrage du téléphone, suppressions espacées, relecture d'une sauvegarde déjà envoyée.
+- **pCloud comme dossier Android** : **confirmé** : écriture directe et envoi complet dans le cloud (lot 0) ; accès conservé après un redémarrage et suppressions espacées (lot 2). Reste à vérifier : la relecture d'une sauvegarde déjà envoyée (test 7 du lot 2).
 - **Réponses de pCloud peu fiables** : pCloud peut signaler une erreur sur une écriture ou une suppression réussie, et refuse les actions trop rapprochées. Parade : une action à la fois et vérification par la liste du dossier.
 - **Tâche de fond et dossier pCloud** : l'écriture en arrière-plan peut échouer si l'app pCloud est endormie ; la sauvegarde à l'ouverture de l'app sert de filet.
 - **Mot de passe de sauvegarde perdu** = sauvegardes illisibles. Avertissement obligatoire.
