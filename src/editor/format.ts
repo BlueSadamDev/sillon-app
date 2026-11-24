@@ -32,6 +32,7 @@ function mapLines(text: string, sel: Selection, change: (line: string, all: stri
 const HEADING = /^(#{1,6})\s+/;
 const TASK = /^(\s*)[-*+]\s+\[[ xX]\]\s+/;
 const BULLET = /^(\s*)[-*+]\s+/;
+const DONE = /^\s*[-*+]\s+\[[xX]\]/;
 
 /** Titre : aucun → « # » → « ## » → aucun. */
 function heading(line: string): string {
@@ -85,8 +86,12 @@ export function applyAction(action: Action, text: string, selection: Selection):
       });
     }
     case 'task': {
+      // Lot 1.1 : sur des cases, coche (ou décoche si toutes sont cochées) ; ailleurs, crée la case.
       return mapLines(text, sel, (line, all) => {
-        if (all.every((l) => TASK.test(l))) return line.replace(TASK, '$1');
+        if (all.every((l) => TASK.test(l))) {
+          const allDone = all.every((l) => DONE.test(l));
+          return line.replace(TASK, (m) => m.replace(/\[[ xX]\]/, allDone ? '[ ]' : '[x]'));
+        }
         if (TASK.test(line)) return line;
         if (BULLET.test(line)) return line.replace(BULLET, '$1- [ ] ');
         return `- [ ] ${line}`;

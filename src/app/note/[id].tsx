@@ -24,6 +24,7 @@ import { notesChanged } from '@/db/events';
 import { openNotes } from '@/db/expoDb';
 import type { NoteWithCount } from '@/db/notesRepo';
 import { applyAction, continueList, type Action, type Selection } from '@/editor/format';
+import { toggleTaskAt } from '@/editor/markdownPrep';
 import { MarkdownView } from '@/editor/MarkdownView';
 import { SAVE_DELAY_MS } from '@/editor/settings';
 import { Toolbar } from '@/editor/Toolbar';
@@ -148,6 +149,19 @@ export default function NoteScreen() {
     const target = (await repo.findByTitle(title)) ?? (await repo.create({ title }));
     router.push({ pathname: '/note/[id]', params: { id: target.id } });
   }, []);
+
+  /** Mode lecture : toucher une case la coche ou la décoche, et enregistre tout de suite (lot 1.1). */
+  const onToggleTask = useCallback(
+    (line: number) => {
+      const d = latest.current;
+      const body = toggleTaskAt(d.body, line);
+      if (body === d.body) return;
+      latest.current = { ...d, body };
+      setDraft(latest.current);
+      save();
+    },
+    [save],
+  );
 
   async function togglePin() {
     setMenu('none');
@@ -304,7 +318,7 @@ export default function NoteScreen() {
             </View>
           ) : (
             <View style={styles.fill}>
-              <MarkdownView value={draft.body} onNoteLink={onNoteLink} header={header} />
+              <MarkdownView value={draft.body} onNoteLink={onNoteLink} onToggleTask={onToggleTask} header={header} />
             </View>
           )}
           {mode === 'write' ? (

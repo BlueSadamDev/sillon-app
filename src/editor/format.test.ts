@@ -24,10 +24,20 @@ describe('barre d’outils', () => {
     expect(on.text).toBe('- a\n- b\nc');
     expect(applyAction('list', on.text, on.selection).text).toBe('a\nb\nc');
   });
-  it('case à cocher : transforme une puce, puis retire la case', () => {
+  it('case à cocher : crée la case, puis la coche et la décoche (lot 1.1)', () => {
     const on = applyAction('task', '- pain', at(6));
     expect(on.text).toBe('- [ ] pain');
-    expect(applyAction('task', on.text, on.selection).text).toBe('pain');
+    const done = applyAction('task', on.text, on.selection);
+    expect(done.text).toBe('- [x] pain');
+    expect(done.selection).toEqual(on.selection);
+    expect(applyAction('task', done.text, done.selection).text).toBe('- [ ] pain');
+    expect(applyAction('task', 'lait', at(2)).text).toBe('- [ ] lait');
+  });
+  it('case à cocher sur plusieurs lignes : coche tout, sauf si tout est déjà coché', () => {
+    const mixed = '- [x] a\n- [ ] b';
+    expect(applyAction('task', mixed, { start: 0, end: mixed.length }).text).toBe('- [x] a\n- [x] b');
+    const done = '- [x] a\n- [X] b';
+    expect(applyAction('task', done, { start: 0, end: done.length }).text).toBe('- [ ] a\n- [ ] b');
   });
   it('lien vers une note : [[ ]] autour de la sélection', () => {
     expect(applyAction('link', 'voir Jardin', { start: 5, end: 11 })).toEqual({
