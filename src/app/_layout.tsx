@@ -7,6 +7,7 @@ import { AccountProvider, useAccount } from '@/account/AccountProvider';
 import { CreateAccount } from '@/account/ui/CreateAccount';
 import { OfferBiometrics } from '@/account/ui/OfferBiometrics';
 import { Unlock } from '@/account/ui/Unlock';
+import { SemanticProvider } from '@/ai/SemanticProvider';
 import { BackupProvider } from '@/backup/BackupProvider';
 import { OfferBackup } from '@/backup/ui/OfferBackup';
 import { StartupScreen } from '@/components/StartupScreen';
@@ -46,6 +47,7 @@ function Gate() {
   return (
     <>
       {opened && (
+        <SemanticProvider>
         <Stack screenOptions={{ contentStyle: { backgroundColor: colors.bg } }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="note/[id]" options={{ headerShown: false }} />
@@ -61,7 +63,9 @@ function Gate() {
           <Stack.Screen name="essai-chiffrement" options={{ title: t.crypto.title }} />
           <Stack.Screen name="essai-markdown" options={{ title: t.markdown.title }} />
           <Stack.Screen name="essai-embeddings" options={{ title: t.embeddings.title }} />
+          <Stack.Screen name="modele" options={{ headerShown: false }} />
         </Stack>
+        </SemanticProvider>
       )}
       {status === 'locked' && <Unlock />}
     </>

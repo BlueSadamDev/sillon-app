@@ -55,3 +55,48 @@ export async function embed(e: LoadedEmbedder, text: string): Promise<{ vector: 
 export async function releaseEmbedder(e: LoadedEmbedder | null): Promise<void> {
   if (e) await e.ctx.release().catch(() => undefined);
 }
+
+/**
+ * Moteur du lot 3 : le modèle est chargé au premier calcul, les calculs passent un par un, et le
+ * modèle est libéré après INDEXING.releaseAfterMs sans rien à calculer (règle : chargé à la demande,
+ * puis libéré). Au lot 4, appeler release() avant de charger le modèle de rédaction : un seul modèle
+ * en mémoire à la fois.
+ */
+export function createLazyEngine(modelUri: string, dimension: number, releaseAfterMs: number) {
+  let loaded: Promise<LoadedEmbedder> | null = null;
+  let queue: Promise<unknown> = Promise.resolve();
+  let timer: ReturnType<typeof setTimeout> | null = null;
+
+  async function release(): Promise<void> {
+    if (timer) clearTimeout(timer);
+    timer = null;
+    const current = loaded;
+    loaded = null;
+    if (current) await releaseEmbedder(await current.catch(() => null));
+  }
+
+  function embedOne(text: string): Promise<number[]> {
+    const job = queue.then(async () => {
+      if (timer) clearTimeout(timer);
+      if (needsAppRestart(modelUri)) throw new Error('un autre modèle a déjà servi');
+      loaded ??= loadEmbedder(modelUri);
+      let e: LoadedEmbedder;
+      try {
+        e = await loaded;
+      } catch (err) {
+        loaded = null;
+        throw err;
+      }
+      try {
+        const { vector } = await embed({ ...e, dimension }, text);
+        return vector;
+      } finally {
+        timer = setTimeout(() => void release(), releaseAfterMs);
+      }
+    });
+    queue = job.catch(() => undefined);
+    return job;
+  }
+
+  return { embed: embedOne, release };
+}

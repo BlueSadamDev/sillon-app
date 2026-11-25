@@ -394,6 +394,7 @@ export function createNotesRepo(db: Db, { now, newId, identity = () => NO_IDENTI
         await db.run('DELETE FROM notes_fts');
         await db.run('DELETE FROM note_tags');
         await db.run('DELETE FROM local_state');
+        await db.run('DELETE FROM note_vectors');
       });
     },
   };

@@ -1,7 +1,8 @@
 # Cahier des charges – Sillon
 
 Nom de l'app : **Sillon** (application de notes personnelle avec IA locale).
-Version : 0.9 (24 novembre 2026). Changements par rapport à la 0.8 : synchronisation entre le téléphone et une tablette Android par un relais sur le mini PC via Tailscale (lots 7.0, 7 et 7.1), collaboration à plusieurs (lot 8), d'après `docs/ETUDE_SYNCHRONISATION.md` ; destination de sauvegarde au choix (lot 2.2) ; clé de secours unique pour le coffre et la sauvegarde (lot 7) ; sauvegarde automatique d'Android désactivée (section 6).
+Version : 0.10 (24 novembre 2026). Changements par rapport à la 0.9 : précisions du lot 3 (F4 et F5 : recherche par le sens, notes liées, seuil réglable, notes longues).
+Version 0.9 (24 novembre 2026). Changements par rapport à la 0.8 : synchronisation entre le téléphone et une tablette Android par un relais sur le mini PC via Tailscale (lots 7.0, 7 et 7.1), collaboration à plusieurs (lot 8), d'après `docs/ETUDE_SYNCHRONISATION.md` ; destination de sauvegarde au choix (lot 2.2) ; clé de secours unique pour le coffre et la sauvegarde (lot 7) ; sauvegarde automatique d'Android désactivée (section 6).
 Version 0.8 (24 novembre 2026). Changements par rapport à la 0.7 : accès au dossier pCloud déclaré perdu seulement après plusieurs essais espacés (F7), choix du lot 2.1 pour le partage simple (F10).
 Version 0.7 (24 novembre 2026). Changements par rapport à la 0.6 : auteur et appareil précisés (3.1), vérifications pCloud du lot 2 (section 8).
 Version 0.6 (23 novembre 2026). Changements par rapport à la 0.5 : retours du premier usage (lot 1.1 : cases à cocher dans les deux modes, copie du texte, bouton « + », brouillon de la capture, boutons « Lire » et « Enregistrer » intervertis), dictée vocale locale (F11, lot 6), partage simple d'une note (F10, lot 2.1), préparation des données au partage et à la collaboration (3.1), feuille de route du partage à long terme (section 7, « Plus tard »).
@@ -83,9 +84,10 @@ L'APK de production **n'a pas la permission Internet** : l'app écrit le fichier
 ### F4 – Organisation et recherche
 - Arborescence des pages, tags, épingles, archives, corbeille.
 - Recherche par mots (texte intégral) dès le lot 1 ; recherche par le sens à partir du lot 3.
+- **Recherche par le sens (lot 3)** : dans l'onglet Recherche, une partie « Par le sens » sous les résultats par mots, sans les répéter. Le modèle d'embeddings est importé à la main (Compte > Recherche par le sens), vérifié par taille et empreinte SHA-256, supprimable. Seul le début d'une note longue est pris en compte (environ 400 mots, limite du modèle). Seuil de proximité réglable en trois niveaux (Large, Normale, Stricte). Les notes de la corbeille sont ignorées, les archives restent cherchables.
 
 ### F5 – Insights (IA locale)
-- **Notes liées** : sous chaque note, les notes les plus proches par le sens.
+- **Notes liées** : sous chaque note (mode lecture), au plus 5 notes parmi les plus proches par le sens, au-dessus du seuil choisi (lot 3).
 - **Résumé et tags proposés** pour une note, acceptés ou refusés par l'utilisateur.
 - **Questions sur ses notes** : réponse courte qui cite les notes utilisées ; « je ne sais pas » si rien ne répond.
 - **Bilan de la semaine** : thèmes qui reviennent, idées notées plusieurs fois, sujets laissés en plan, 2 ou 3 pistes pour la semaine suivante.

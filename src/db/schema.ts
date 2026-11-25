@@ -48,6 +48,19 @@ const MIGRATIONS: string[] = [
     value TEXT NOT NULL
   );
   `,
+  // Version 5 : vecteurs des notes (lot 3, recherche par le sens). Données calculées à partir de la
+  // table « notes », propres au téléphone : jamais sauvegardées ni synchronisées, recalculables.
+  `
+  CREATE TABLE note_vectors (
+    note_id TEXT PRIMARY KEY NOT NULL,
+    model_id TEXT NOT NULL,
+    text_hash TEXT NOT NULL,
+    source_updated_at INTEGER NOT NULL,
+    dims INTEGER NOT NULL,
+    vector TEXT NOT NULL,
+    computed_at INTEGER NOT NULL
+  );
+  `,
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;
