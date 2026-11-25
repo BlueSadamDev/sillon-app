@@ -139,7 +139,7 @@ Solution testée : une **préparation du texte** (`src/editor/markdownPrep.ts`, 
 | Modèle | Fichier | Taille | Dimension | Licence | SHA-256 |
 | --- | --- | --- | --- | --- | --- |
 | multilingual-e5-small | `multilingual-e5-small-q8_0.gguf` (TwinSunsLLC/multilingual-e5-small-gguf) | 126 Mo | 384 | MIT | à relever |
-| EmbeddingGemma 300M (QAT) | `embeddinggemma-300m-qat-Q8_0.gguf` (ggml-org/embeddinggemma-300m-qat-q8_0-GGUF) | 313 Mo | 768 | Gemma | `6fa0c02a…` (à relever en entier) |
+| EmbeddingGemma 300M (QAT) | `embeddinggemma-300m-qat-Q8_0.gguf` (ggml-org/embeddinggemma-300m-qat-q8_0-GGUF) | 313 Mo (329 Mo affichés par l'app au lot 3) | 768 | Gemma | `6fa0c02a9c302be6f977521d399b4de3a46310a4f2621ee0063747881b673f67` (relevé au lot 3) |
 | Qwen3-Embedding 0.6B | `Qwen3-Embedding-0.6B-Q8_0.gguf` (Qwen/Qwen3-Embedding-0.6B-GGUF) | 610 Mo | 1 024 | Apache 2.0 | `06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439` |
 
 Préfixes (réglés dans `src/ai/settings.ts`) : `query: ` / `passage: ` pour e5,
