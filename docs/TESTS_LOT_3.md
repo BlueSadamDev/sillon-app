@@ -11,15 +11,15 @@ Renvoyer seulement « oui / non », les messages affichés et les mesures, jamai
 
 ## Liste à cocher
 
-- [ ] **1. Modèle absent.** Avant l'import : sous une note en mode lecture, le bloc « Notes liées » dit
+- [x] **1. Modèle absent.** Avant l'import : sous une note en mode lecture, le bloc « Notes liées » dit
   que Sillon a besoin de son modèle, avec « Importe-le depuis Compte » qui ouvre l'écran du modèle.
   Onglet Recherche, taper « jardin » : la partie « Par le sens » dit la même chose.
-- [ ] **2. Mauvais fichier.** Compte > Recherche par le sens > « Importer le modèle », choisir un autre
+- [x] **2. Mauvais fichier.** Compte > Recherche par le sens > « Importer le modèle », choisir un autre
   fichier (une photo, un PDF) : message clair, rien n'est installé.
 - [x] **3. Import.** (Taille affichée : 329 Mo.) Choisir le bon fichier : « Sillon vérifie le fichier… », puis « Modèle installé sur
   ce téléphone (… Mo) ». **Noter la taille affichée** (elle sera figée dans les réglages). Combien de
   secondes a pris la vérification ?
-- [x] **4. Rattrapage.** (« Toutes tes notes sont prises en compte. » atteint ; durée à préciser.) Juste après l'import, l'écran affiche « Sillon a lu N notes sur M », qui monte
+- [x] **4. Rattrapage.** (« Toutes tes notes sont prises en compte. » atteint, app fluide.) Juste après l'import, l'écran affiche « Sillon a lu N notes sur M », qui monte
   jusqu'à « Toutes tes notes sont prises en compte. ». Pendant ce temps, l'app reste fluide (ouvrir une
   note, écrire, changer d'onglet). Combien de temps pour tout le carnet, et combien de notes ?
 - [x] **5. Notes liées.** Ouvrir « Essai potager » en mode lecture : « Essai jardinage » apparaît dans
@@ -37,14 +37,14 @@ Renvoyer seulement « oui / non », les messages affichés et les mesures, jamai
   mots » ne trouve rien (ou peu), la partie « Par le sens » propose « Essai potager » et « Essai
   jardinage ». Une note trouvée par les mots n'est pas répétée dans « Par le sens ». Le temps d'attente
   est-il acceptable (moins de 1 s) ?
-- [x] **10. Corbeille.** (Restauration vue ; disparition à confirmer.) Mettre « Essai jardinage » à la corbeille : elle disparaît des notes liées et
+- [x] **10. Corbeille.** (Disparition et retour confirmés.) Mettre « Essai jardinage » à la corbeille : elle disparaît des notes liées et
   de la recherche par le sens. La restaurer : elle revient.
-- [ ] **11. Suppression du modèle.** « Supprimer le modèle », confirmer : les notes sont intactes, les
+- [x] **11. Suppression du modèle.** « Supprimer le modèle », confirmer : les notes sont intactes, les
   états « modèle absent » reviennent (tests 1). Réimporter : les notes liées reviennent vite (les
   vecteurs déjà calculés sont gardés).
-- [ ] **12. Sauvegarde.** « Sauvegarder maintenant » fonctionne comme avant ; la taille du fichier de
+- [x] **12. Sauvegarde.** « Sauvegarder maintenant » fonctionne comme avant ; la taille du fichier de
   sauvegarde n'a pas augmenté avec le modèle (les vecteurs n'y sont pas).
-- [ ] **13. Mode avion.** Mettre le téléphone en mode avion : notes liées et recherche par le sens
+- [x] **13. Mode avion.** Mettre le téléphone en mode avion : notes liées et recherche par le sens
   fonctionnent.
 - [ ] **14. Mémoire.** Après 1 minute sans écrire, l'app libère le modèle : rien de visible, mais
   l'app ne doit pas ralentir ni se fermer après un long usage. Signaler toute fermeture inattendue.
