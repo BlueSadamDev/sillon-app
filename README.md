@@ -4,9 +4,9 @@ Application Android personnelle de prise de notes en Markdown. Une IA locale en 
 Tout se passe sur le téléphone : seule une sauvegarde chiffrée sort, dans un dossier pCloud.
 Référence : [docs/CAHIER_DES_CHARGES.md](docs/CAHIER_DES_CHARGES.md).
 
-## État actuel : lot 3 (recherche par le sens), en cours de test
+## État actuel : lot 3 (recherche par le sens), testé
 
-Lot 2.1 (partage simple) testé. Lot 3 : APK à construire et à tester ([docs/TESTS_LOT_3.md](docs/TESTS_LOT_3.md)).
+Tests sur le téléphone : [docs/TESTS_LOT_3.md](docs/TESTS_LOT_3.md).
 
 - Compte local créé au premier lancement (seule l'empreinte du mot de passe est gardée, dans le coffre
   sécurisé du téléphone), déverrouillage par empreinte digitale ou mot de passe, délai de verrouillage réglable.

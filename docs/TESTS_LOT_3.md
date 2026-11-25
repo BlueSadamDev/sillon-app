@@ -27,7 +27,7 @@ Renvoyer seulement « oui / non », les messages affichés et les mesures, jamai
 - [x] **6. Enregistrement.** Écrire une nouvelle note « Essai semis » (semer des radis au potager),
   « Enregistrer », la rouvrir en mode lecture : « Sillon lit cette note… » peut s'afficher un instant,
   puis « Essai potager » apparaît dans ses notes liées.
-- [ ] **7. Seuil.** (1er essai : seul Stricte, à 0,55, donnait des liens justes ; Large et Normale montraient des notes sans rapport. Seuils relevés : Large 0,50, Normale 0,55, Stricte 0,62. À revérifier avec le nouvel APK.) Écran du modèle, « Proximité des notes liées » : Large, Normale, Stricte. Avec
+- [x] **7. Seuil.** (1er essai : seul Stricte, à 0,55, donnait des liens justes. Seuils relevés : Large 0,50, Normale 0,55, Stricte 0,62 ; jugés pertinents avec l'APK n° 16.) Écran du modèle, « Proximité des notes liées » : Large, Normale, Stricte. Avec
   Stricte, moins de notes liées ; avec Large, davantage. Le choix est gardé après fermeture de l'app.
   Avec tes vraies notes : quel niveau donne les liens les plus justes ? Des notes sans rapport
   apparaissent-elles en Normale ?
