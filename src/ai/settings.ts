@@ -77,7 +77,7 @@ export function familyForFile(fileName: string): ModelFamily {
 /**
  * Modèle d'embeddings retenu au lot 0 (rapport, section 4). Seul ce fichier est accepté :
  * l'empreinte SHA-256 est le contrôle décisif ; la taille sert de premier tri rapide (calculer
- * l'empreinte de 313 Mo prend quelques secondes). Taille exacte à relever au premier import.
+ * l'empreinte de 313 Mo prend quelques secondes). Le S21 affiche 329 Mo (relevé au lot 3).
  */
 export const EMBEDDING_MODEL = {
   /** Identifiant rangé avec chaque vecteur : changer de modèle fait tout recalculer. */
@@ -85,8 +85,8 @@ export const EMBEDDING_MODEL = {
   label: 'EmbeddingGemma 300M',
   fileName: 'embeddinggemma-300m-qat-Q8_0.gguf',
   sha256: '6fa0c02a9c302be6f977521d399b4de3a46310a4f2621ee0063747881b673f67',
-  minBytes: 290_000_000,
-  maxBytes: 340_000_000,
+  minBytes: 328_000_000,
+  maxBytes: 331_000_000,
   /** Taille des vecteurs de ce modèle. */
   dimension: 768,
   /** Famille (préfixes) : voir MODEL_FAMILIES. */
@@ -127,12 +127,13 @@ export const DEFAULT_PROXIMITY_LEVEL: ProximityLevel = 'normal';
 
 /**
  * Seuils de proximité (cosinus, de -1 à 1) en dessous desquels une note n'est pas montrée.
- * Valeurs de départ, à caler sur le S21 avec de vraies notes (docs/TESTS_LOT_3.md).
+ * Calés au lot 3 sur le S21 : 0,35 et 0,45 donnaient des notes sans rapport, 0,55 des liens justes.
+ * 0,55 devient donc la valeur « Normale ».
  */
 export const PROXIMITY_THRESHOLDS: Record<ProximityLevel, number> = {
-  large: 0.35,
-  normal: 0.45,
-  strict: 0.55,
+  large: 0.5,
+  normal: 0.55,
+  strict: 0.62,
 };
 
 /** Bloc « Notes liées » sous une note. */
