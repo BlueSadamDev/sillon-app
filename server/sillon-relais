@@ -1,0 +1,13 @@
+#!/bin/sh
+# Commandes du relais Sillon sur le mini PC (installée dans /usr/local/bin par le guide) :
+#   sillon-relais code     nouveau code d'installation pour autoriser un appareil
+#   sillon-relais etat     appareils autorisés, messages rangés, taille de la base
+#   sillon-relais charge   test de charge (faux appareils, effacés à la fin)
+set -e
+case "$1" in
+  code | etat | charge) script="$1"; shift ;;
+  *) echo "Usage : sillon-relais code | etat | charge"; exit 1 ;;
+esac
+cd /opt/sillon-relais
+exec sudo -u sillon-relais env RELAIS_DB=/var/lib/sillon-relais/relais.db RELAIS_PORT=8787 \
+  /usr/bin/node --disable-warning=ExperimentalWarning "scripts/$script.ts" "$@"

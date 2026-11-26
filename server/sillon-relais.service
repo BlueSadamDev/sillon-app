@@ -1,0 +1,33 @@
+# Service système du relais Sillon (prototype du lot 7.0).
+# Installé dans /etc/systemd/system/ par le guide server/INSTALLATION.md.
+[Unit]
+Description=Relais Sillon (prototype, lot 7.0)
+After=network-online.target tailscaled.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sillon-relais
+Group=sillon-relais
+WorkingDirectory=/opt/sillon-relais
+Environment=RELAIS_DB=/var/lib/sillon-relais/relais.db
+Environment=RELAIS_PORT=8787
+ExecStart=/usr/bin/node --disable-warning=ExperimentalWarning src/main.ts
+Restart=always
+RestartSec=5
+
+# Le relais n'a besoin que de son dossier de données : tout le reste lui est fermé.
+StateDirectory=sillon-relais
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+MemoryMax=256M
+
+[Install]
+WantedBy=multi-user.target

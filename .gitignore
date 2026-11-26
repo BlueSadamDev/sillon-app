@@ -56,3 +56,6 @@ exports/
 *.bin
 *.safetensors
 *.onnx
+
+# Base locale du relais quand on le lance sur l’ordinateur (lot 7.0)
+server/relais.db*

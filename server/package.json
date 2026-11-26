@@ -1,0 +1,26 @@
+{
+  "name": "sillon-relais",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Relais prototype de Sillon (lot 7.0) : range et transmet des messages chiffrés qu'il ne peut pas lire.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/main.ts",
+    "test": "node --disable-warning=ExperimentalWarning --test test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "code": "node --disable-warning=ExperimentalWarning scripts/code.ts",
+    "etat": "node --disable-warning=ExperimentalWarning scripts/etat.ts",
+    "charge": "node --disable-warning=ExperimentalWarning scripts/charge.ts"
+  },
+  "dependencies": {
+    "ws": "8.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.4",
+    "@types/ws": "8.18.2",
+    "typescript": "6.0.3"
+  }
+}
