@@ -33,7 +33,8 @@
     "react-native-marked": "8.3.4",
     "react-native-safe-area-context": "~5.11.1",
     "react-native-screens": "~4.30.1",
-    "react-native-svg": "15.16.0"
+    "react-native-svg": "15.16.0",
+    "yjs": "13.6.33"
   },
   "devDependencies": {
     "@noble/ciphers": "^2.4.0",
@@ -63,6 +64,9 @@
       "/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|standard-navigation|@noble|marked))",
       "/node_modules/react-native-reanimated/plugin/",
       "/node_modules/@react-native/babel-preset/"
-    ]
+    ],
+    "moduleNameMapper": {
+      "^isomorphic-webcrypto/src/react-native$": "<rootDir>/src/sync/essai/testing/nodeWebcrypto.ts"
+    }
   }
 }

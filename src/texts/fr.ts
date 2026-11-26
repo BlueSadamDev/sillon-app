@@ -367,11 +367,13 @@ export const t = {
   },
   benches: {
     title: 'Sillon : bancs d’essai',
-    intro: 'Quatre essais techniques du lot 0. Les notes utilisées sont fictives.',
+    intro: 'Essais techniques des lots 0 et 7.0. Les notes utilisées sont fictives.',
     pcloud: 'Dossier pCloud',
     crypto: 'Chiffrement',
     markdown: 'Rendu Markdown',
     embeddings: 'Embeddings',
+    yjs: 'Synchro : Yjs et éditeur',
+    sodium: 'Synchro : fonctions libsodium',
   },
   common: {
     running: 'Essai en cours…',
@@ -402,6 +404,26 @@ export const t = {
     title: 'Banc d’essai : Markdown',
     measure: 'Mesurer l’analyse d’une longue note',
     noteLink: (title: string) => `Lien vers la note « ${title} »`,
+  },
+  yjsBench: {
+    title: 'Banc d’essai : Yjs et éditeur',
+    intro:
+      'Mesure la frappe dans un texte relié à Yjs, avec un faux deuxième appareil qui écrit en même temps. Rien ne sort du téléphone, aucune vraie note n’est touchée.',
+    measure: 'Mesurer la frappe automatique (4 tailles de texte)',
+    open: (size: string) => `Éditeur d’essai : ${size} caractères`,
+    close: 'Fermer l’éditeur d’essai',
+    peerOn: 'Démarrer le faux appareil (un mot toutes les 2 s)',
+    peerOff: 'Arrêter le faux appareil',
+    compare: 'Comparer les deux appareils',
+    status: (keys: number, last: string, p95: string, words: number) =>
+      `Frappes : ${keys} · dernière : ${last} ms · 95 % sous ${p95} ms · mots reçus : ${words}`,
+  },
+  sodiumBench: {
+    title: 'Banc d’essai : libsodium',
+    intro: 'Vérifie les fonctions de libsodium prévues pour la synchronisation : présence, résultats exacts, vitesse.',
+    presence: 'Fonctions présentes',
+    correctness: 'Résultats exacts et refus attendus',
+    speed: 'Mesurer la vitesse',
   },
   embeddings: {
     title: 'Banc d’essai : embeddings',

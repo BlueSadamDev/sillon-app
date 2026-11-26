@@ -63,6 +63,8 @@ function Gate() {
           <Stack.Screen name="essai-chiffrement" options={{ title: t.crypto.title }} />
           <Stack.Screen name="essai-markdown" options={{ title: t.markdown.title }} />
           <Stack.Screen name="essai-embeddings" options={{ title: t.embeddings.title }} />
+          <Stack.Screen name="essai-yjs" options={{ title: t.yjsBench.title }} />
+          <Stack.Screen name="essai-libsodium" options={{ title: t.sodiumBench.title }} />
           <Stack.Screen name="modele" options={{ headerShown: false }} />
         </Stack>
         </SemanticProvider>
